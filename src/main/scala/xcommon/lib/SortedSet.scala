@@ -93,6 +93,10 @@ case class SsdbSortedSet(dbName: String, client: SSDB)(implicit ec: ExecutionCon
       client.zclear().ok()
     }
   }
+
+  override def rank(key: String, reverseOrder: Boolean): Future[Option[Int]] = ???
+
+  override def range(from: Int, num: Int, reverseOrder: Boolean): Future[Option[Array[String]]] = ???
 }
 
 

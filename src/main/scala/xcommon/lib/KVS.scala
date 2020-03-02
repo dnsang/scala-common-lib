@@ -5,7 +5,7 @@ import org.nutz.ssdb4j.spi.SSDB
 import scala.concurrent.{ExecutionContext, Future}
 
 
-trait KV[Key, Value] {
+trait KVS[Key, Value] {
 
   def get(key: Key): Future[Option[Value]]
 
@@ -27,27 +27,27 @@ trait KV[Key, Value] {
 }
 
 
-case class KVDbImpl[Key, Value](dbName: String, client: SSDB)(implicit ec: ExecutionContext = ExecutionContext.global) extends KV[Key, Value] {
+case class KVSDbImpl(dbName: String, client: SSDB)(implicit ec: ExecutionContext = ExecutionContext.global) extends KVS[String, String] {
 
-  override def get(key: Key): Future[Option[Value]] = {
+  override def get(key: String): Future[Option[String]] = {
     Future {
       val resp = client.hget(dbName, key)
-      if (resp.ok()) {
-        Some(resp.asInstanceOf[Value])
-      }
-      None
+      if (resp.ok())
+        Some(resp.asString())
+      else
+        None
     }
   }
 
-  override def mget(keys: Key*): Future[Option[Map[Key, Value]]] = {
+  override def mget(keys: String*): Future[Option[Map[String, String]]] = {
     Future {
       val resp = client.multi_hget(dbName, keys)
-      if (resp.ok()) Some(resp.asInstanceOf[Map[Key, Value]])
-      None
+      if (resp.ok()) Some(resp.asInstanceOf[Map[String, String]])
+      else None
     }
   }
 
-  override def add(k: Key, v: Value): Future[Boolean] = {
+  override def add(k: String, v: String): Future[Boolean] = {
     Future {
       client.hset(dbName, k, v).ok()
     }
@@ -66,21 +66,24 @@ case class KVDbImpl[Key, Value](dbName: String, client: SSDB)(implicit ec: Execu
     }
   }
 
-  override def remove(key: Key): Future[Boolean] = {
+  override def remove(key: String): Future[Boolean] = {
     Future {
       client.multi_hdel(dbName, key).ok()
     }
   }
 
-  override def mremove(keys: Key*): Future[Boolean] = {
+  override def mremove(keys: String*): Future[Boolean] = {
     Future {
       client.multi_hdel(dbName, keys).ok()
     }
   }
 
-  override def size(): Future[Int] = {
+  override def size(): Future[Option[Int]] = {
     Future {
-      client.hsize(dbName).asInt()
+      val resp = client.hsize(dbName)
+      if (resp.ok()) Some(resp.asInt())
+      else None
+
     }
   }
 
