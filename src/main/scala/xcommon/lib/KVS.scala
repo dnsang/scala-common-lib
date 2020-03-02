@@ -9,7 +9,7 @@ trait KVS[Key, Value] {
 
   def get(key: Key): Future[Option[Value]]
 
-  def mget(keys: Key*): Future[Option[Map[Key, Value]]]
+  def mget(keys: Array[Key]): Future[Option[Map[Key, Value]]]
 
   def add(k: Key, v: Value): Future[Boolean]
 
@@ -17,7 +17,7 @@ trait KVS[Key, Value] {
 
   def remove(key: Key): Future[Boolean]
 
-  def mremove(keys: Key*): Future[Boolean]
+  def mremove(keys: Array[Key]): Future[Boolean]
 
   def size(): Future[Option[Int]]
 
@@ -39,7 +39,7 @@ case class KVSDbImpl(dbName: String, client: SSDB)(implicit ec: ExecutionContext
     }
   }
 
-  override def mget(keys: String*): Future[Option[Map[String, String]]] = {
+  override def mget(keys: Array[String]): Future[Option[Map[String, String]]] = {
     Future {
       val resp = client.multi_hget(dbName, keys)
       if (resp.ok()) Some(resp.asInstanceOf[Map[String, String]])
@@ -72,7 +72,7 @@ case class KVSDbImpl(dbName: String, client: SSDB)(implicit ec: ExecutionContext
     }
   }
 
-  override def mremove(keys: String*): Future[Boolean] = {
+  override def mremove(keys: Array[String]): Future[Boolean] = {
     Future {
       client.multi_hdel(dbName, keys).ok()
     }

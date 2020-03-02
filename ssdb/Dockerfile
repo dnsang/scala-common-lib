@@ -21,7 +21,7 @@ RUN mkdir -p /var/lib/ssdb && \
     -e 's@pidfile = .*@pidfile = /run/ssdb.pid@' \
     -e 's@level:.*@level: info@' \
     -e 's@ip:.*@ip: 0.0.0.0@' \
-    -i /etc/ssdb.conf
+    -pair /etc/ssdb.conf
 
 
 ENV TZ Asia/Shanghai
