@@ -1,6 +1,4 @@
-# KvDb
+# Scala Common Lib
 
-This project aims to provide a generic common interface for java/scala developers.
-
-KvDb Implement using SSDB/LevelDB/CouchbaseDB.
+This project aims to provide a generic common backend interface/impl for java/scala developers.
 
