@@ -1,3 +1,5 @@
+package education.x.common
+
 object TestSyntax {
 
 

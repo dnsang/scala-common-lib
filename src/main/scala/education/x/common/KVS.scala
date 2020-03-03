@@ -1,4 +1,4 @@
-package xcommon.lib
+package education.x.common
 
 import org.nutz.ssdb4j.spi.SSDB
 

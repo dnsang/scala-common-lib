@@ -1,4 +1,4 @@
-package xcommon.lib
+package education.x.common
 
 import scala.concurrent.Future
 

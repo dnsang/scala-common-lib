@@ -1,12 +1,14 @@
+package education.x.common
+
 import java.util.concurrent.TimeUnit
 
 import org.nutz.ssdb4j.SSDBs
 import org.nutz.ssdb4j.spi.SSDB
 import org.scalatest.funsuite.AnyFunSuite
-import xcommon.lib.{KVS, KVSDbImpl}
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+
 
 class SSDBImplTest extends AnyFunSuite {
   val ssdb: SSDB = SSDBs.pool(

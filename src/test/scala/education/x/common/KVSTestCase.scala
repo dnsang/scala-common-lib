@@ -1,10 +1,7 @@
-import org.scalatest.Matchers
-import org.scalatest.funsuite.{AnyFunSuite, AsyncFunSuite}
-import org.scalatest.time.Millisecond
-import xcommon.lib.KVS
+package education.x.common
 
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.concurrent.duration._
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext}
 
 trait KVSTestCase {
 
@@ -28,18 +25,13 @@ trait KVSTestCase {
   }
 
   def testMultiAdd(data: Array[(String, String)]): Boolean = {
-    var result = false
 
     val resp = kv.madd(data)
     resp.onComplete(f => {
-      result = true
-      result &= f.isSuccess
       assert(f.isSuccess)
     })
     Await.result(resp, timeout)
-
-    assert(result)
-    result
+    resp.value.get.get
   }
 
   def testGet(data: Array[(String, String)]): Boolean = {
@@ -132,4 +124,3 @@ trait KVSTestCase {
 
 
 }
-
