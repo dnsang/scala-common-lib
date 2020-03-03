@@ -1,7 +1,10 @@
 package education.x.commons
 
+import java.nio.ByteBuffer
+
 import org.nutz.ssdb4j.spi.SSDB
 
+import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 
 trait SortedSet[Key, Value] {
@@ -12,11 +15,11 @@ trait SortedSet[Key, Value] {
 
   def add(k: Key, v: Value): Future[Boolean]
 
-  def madd(arrKeyAndValue: Any*): Future[Boolean]
+  def madd(arrKeyAndValue: Array[(String, Long)]): Future[Boolean]
 
   def remove(key: Key): Future[Boolean]
 
-  def mremove(keys: Key*): Future[Boolean]
+  def mremove(keys: Array[Key]): Future[Boolean]
 
   def rank(key: Key, reverseOrder: Boolean): Future[Option[Int]]
 
@@ -41,7 +44,7 @@ case class SsdbSortedSet(dbName: String, client: SSDB)(implicit ec: ExecutionCon
     Future {
       val resp = client.zget(dbName, key)
 
-      if (resp.ok()) Some(resp.asInstanceOf[Long])
+      if (resp.ok()) Some(resp.asLong())
       else None
 
     }
@@ -49,9 +52,16 @@ case class SsdbSortedSet(dbName: String, client: SSDB)(implicit ec: ExecutionCon
 
   override def mget(keys: String*): Future[Option[Map[String, Long]]] = {
     Future {
-      val resp = client.multi_zget(dbName, keys)
-      if (resp.ok())
-        Some(resp.asInstanceOf[Map[String, Long]])
+      val resp = client.multi_zget(dbName, keys: _*)
+      if (resp.ok() && resp.datas.size() % 2 == 0) {
+
+        var map = collection.mutable.Map[String, Long]()
+        val it = resp.datas.iterator
+        while (it.hasNext) {
+          map.put(new String(it.next()), ByteBuffer.wrap(it.next()).getLong)
+        }
+        Some(map.toMap)
+      }
       else None
     }
   }
@@ -62,9 +72,10 @@ case class SsdbSortedSet(dbName: String, client: SSDB)(implicit ec: ExecutionCon
     }
   }
 
-  override def madd(arrKeyAndValue: Any*): Future[Boolean] = {
+  override def madd(arrKeyAndValue: Array[(String, Long)]): Future[Boolean] = {
     Future {
-      client.multi_zset(dbName, arrKeyAndValue).ok()
+      val data: Array[Object] = arrKeyAndValue.flatMap(f => Array[Object](f._1, f._2.asInstanceOf[Object]))
+      client.multi_zset(dbName, data: _*).ok()
     }
   }
 
@@ -74,16 +85,16 @@ case class SsdbSortedSet(dbName: String, client: SSDB)(implicit ec: ExecutionCon
     }
   }
 
-  override def mremove(keys: String*): Future[Boolean] = {
+  override def mremove(keys: Array[String]): Future[Boolean] = {
     Future {
-      client.multi_zdel(dbName, keys).ok()
+      client.multi_zdel(dbName, keys: _*).ok()
     }
   }
 
   override def size(): Future[Option[Int]] = {
     Future {
       val resp = client.zsize(dbName)
-      if(resp.ok()) Some(resp.asInt())
+      if (resp.ok()) Some(resp.asInt())
       else None
     }
   }
