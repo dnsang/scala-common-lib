@@ -105,9 +105,30 @@ case class SsdbSortedSet(dbName: String, client: SSDB)(implicit ec: ExecutionCon
     }
   }
 
-  override def rank(key: String, reverseOrder: Boolean): Future[Option[Int]] = ???
+  override def rank(key: String, reverseOrder: Boolean): Future[Option[Int]] = {
+    Future {
+      val resp = if (reverseOrder) {
+        client.zrank(dbName, key)
+      } else {
+        client.zrrank(dbName, key)
+      }
+      if (resp.ok()) Some(resp.asInt())
+      else None
+    }
+  }
 
-  override def range(from: Int, num: Int, reverseOrder: Boolean): Future[Option[Array[String]]] = ???
+  override def range(from: Int, num: Int, reverseOrder: Boolean): Future[Option[Array[String]]] = {
+    Future {
+      val resp = if (reverseOrder) {
+        client.zrange(dbName, from, num)
+      } else {
+        client.zrrange(dbName, from, num)
+      }
+      import scala.collection.JavaConverters._
+      if (resp.ok()) Some(resp.listString().asScala.toArray)
+      else None
+    }
+  }
 }
 
 
