@@ -13,7 +13,7 @@ trait KVS[Key, Value] {
 
   def add(k: Key, v: Value): Future[Boolean]
 
-  def madd(arrKeyAndValue: Any*): Future[Boolean]
+  def madd(arrKeyAndValue: Array[(Key, Value)]): Future[Boolean]
 
   def remove(key: Key): Future[Boolean]
 
@@ -60,7 +60,7 @@ case class KVSDbImpl(dbName: String, client: SSDB)(implicit ec: ExecutionContext
     * @param arrKeyAndValue
     * @return
     */
-  override def madd(arrKeyAndValue: Any*): Future[Boolean] = {
+  override def madd(arrKeyAndValue: Array[(String,String)]): Future[Boolean] = {
     Future {
       client.multi_hset(dbName, arrKeyAndValue).ok()
     }

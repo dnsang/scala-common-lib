@@ -11,10 +11,10 @@ trait KVSTestCase {
   implicit val ec: ExecutionContext = ExecutionContext.global
   val kv: KVS[String, String]
 
-  def testInsert(data: Array[(String, String)]): Boolean = {
+  def testAdd(data: Array[(String, String)]): Boolean = {
     var result = true
     for (pair <- data) {
-      val resp = kv.add(pair(0), pair(1))
+      val resp = kv.add(pair._1, pair._2)
       resp.onComplete(f => {
         result = result & f.isSuccess
         assert(f.isSuccess)
@@ -26,14 +26,28 @@ trait KVSTestCase {
     result
   }
 
-  def testRetrieve(data: Array[(String, String)]): Boolean = {
+  def testMultiAdd(data: Array[(String, String)]): Boolean = {
+    var result = true
+
+    val resp = kv.madd(data)
+    resp.onComplete(f => {
+      result = result & f.isSuccess
+      assert(f.isSuccess)
+    })
+    Await.result(resp, 1000 millis)
+
+    assert(result)
+    result
+  }
+
+  def testGet(data: Array[(String, String)]): Boolean = {
 
     var result = true
     for (pair <- data) {
-      val resp = kv.get(pair(0))
+      val resp = kv.get(pair._1)
       resp.onComplete(f => {
         result &= f.isSuccess
-        assert(f.get.get.equals(pair(1)))
+        assert(f.get.get.equals(pair._2))
       })
       Await.result(resp, 1000 millis)
     }
@@ -43,7 +57,7 @@ trait KVSTestCase {
   def testDelete(data: Array[(String, String)]): Boolean = {
     var result = true
     for (pair <- data) {
-      val resp = kv.remove(pair(0))
+      val resp = kv.remove(pair._1)
       resp.onComplete(f => {
 
         result &= f.isSuccess
@@ -54,11 +68,23 @@ trait KVSTestCase {
     result
   }
 
+  def testMDelete(data: Array[(String, String)]): Boolean = {
+    var result = true
+
+    val resp = kv.mremove(data.map(item => item._1))
+    resp.onComplete(f => {
+      result &= f.isSuccess
+      result &= f.get
+    })
+    Await.result(resp, 1000 millis)
+    result
+  }
+
 
   def testNotFound(data: Array[(String, String)]): Boolean = {
     var result = true
     for (pair <- data) {
-      val resp = kv.get(pair(0))
+      val resp = kv.get(pair._1)
       resp.onComplete(f => {
         result &= f.isSuccess
         result &= f.get == None
@@ -72,18 +98,38 @@ trait KVSTestCase {
     var result = true
 
     val keys = data.map(f => f._1)
-    kv.mget(keys).onComplete(f => {
-
+    val resp = kv.mget(keys)
+    resp.onComplete(f => {
       result &= f.isSuccess
 
       val retrieveData = f.get.get
       for (kv <- data) {
-        result &= retrieveData.contains(kv(0))
-        result &= retrieveData.get(kv(0)).equals(kv(1))
+        result &= retrieveData.contains(kv._1)
+        result &= retrieveData.get(kv._1).equals(kv._2)
       }
     })
 
+    Await.result(resp, 1000 millis)
+
     result
   }
+
+  def assertSize(size: Int): Boolean = {
+    var result = false
+    val resp = kv.size()
+    resp.onComplete(f => {
+      assert(f.get != None)
+      val retrieveSize = f.get.get
+      result = true
+      assert(retrieveSize == size)
+      result &= (retrieveSize == size)
+      println(s"assertSize retrieveSize=$retrieveSize")
+    })
+
+    Await.result(resp, 1000 millis)
+    result
+  }
+
+
 }
 
