@@ -10,6 +10,7 @@ trait KVSTestCase {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
   val kv: KVS[String, String]
+  val timeout = Duration.Inf
 
   def testAdd(data: Array[(String, String)]): Boolean = {
     var result = true
@@ -20,21 +21,22 @@ trait KVSTestCase {
         assert(f.isSuccess)
 
       })
-      Await.result(resp, 1000 millis)
+      Await.result(resp, timeout)
     }
     assert(result)
     result
   }
 
   def testMultiAdd(data: Array[(String, String)]): Boolean = {
-    var result = true
+    var result = false
 
     val resp = kv.madd(data)
     resp.onComplete(f => {
-      result = result & f.isSuccess
+      result = true
+      result &= f.isSuccess
       assert(f.isSuccess)
     })
-    Await.result(resp, 1000 millis)
+    Await.result(resp, timeout)
 
     assert(result)
     result
@@ -49,7 +51,7 @@ trait KVSTestCase {
         result &= f.isSuccess
         assert(f.get.get.equals(pair._2))
       })
-      Await.result(resp, 1000 millis)
+      Await.result(resp, timeout)
     }
     result
   }
@@ -63,7 +65,7 @@ trait KVSTestCase {
         result &= f.isSuccess
         result &= f.get
       })
-      Await.result(resp, 1000 millis)
+      Await.result(resp, timeout)
     }
     result
   }
@@ -76,7 +78,7 @@ trait KVSTestCase {
       result &= f.isSuccess
       result &= f.get
     })
-    Await.result(resp, 1000 millis)
+    Await.result(resp, timeout)
     result
   }
 
@@ -89,27 +91,26 @@ trait KVSTestCase {
         result &= f.isSuccess
         result &= f.get == None
       })
-      Await.result(resp, 1000 millis)
+      Await.result(resp, timeout)
     }
     result
   }
 
   def testMGet(data: Array[(String, String)]): Boolean = {
-    var result = true
+    var result = false
 
     val keys = data.map(f => f._1)
     val resp = kv.mget(keys)
     resp.onComplete(f => {
-      result &= f.isSuccess
-
+      result |= f.isSuccess
       val retrieveData = f.get.get
       for (kv <- data) {
         result &= retrieveData.contains(kv._1)
-        result &= retrieveData.get(kv._1).equals(kv._2)
+        result &= retrieveData(kv._1).equals(kv._2)
       }
     })
 
-    Await.result(resp, 1000 millis)
+    Await.result(resp, timeout)
 
     result
   }
@@ -118,15 +119,14 @@ trait KVSTestCase {
     var result = false
     val resp = kv.size()
     resp.onComplete(f => {
-      assert(f.get != None)
+      assert(f.get.isDefined)
       val retrieveSize = f.get.get
-      result = true
-      assert(retrieveSize == size)
-      result &= (retrieveSize == size)
       println(s"assertSize retrieveSize=$retrieveSize")
+      result = retrieveSize == size
+      assert(retrieveSize == size)
     })
 
-    Await.result(resp, 1000 millis)
+    Await.result(resp, timeout)
     result
   }
 

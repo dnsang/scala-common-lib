@@ -3,7 +3,7 @@ package xcommon.lib
 import org.nutz.ssdb4j.spi.SSDB
 
 import scala.concurrent.{ExecutionContext, Future}
-
+import scala.collection.JavaConverters.mapAsScalaMapConverter
 
 trait KVS[Key, Value] {
 
@@ -41,8 +41,10 @@ case class KVSDbImpl(dbName: String, client: SSDB)(implicit ec: ExecutionContext
 
   override def mget(keys: Array[String]): Future[Option[Map[String, String]]] = {
     Future {
-      val resp = client.multi_hget(dbName, keys)
-      if (resp.ok()) Some(resp.asInstanceOf[Map[String, String]])
+      val resp = client.multi_hget(dbName, keys:_*)
+      if (resp.ok()) {
+        Some(resp.mapString().asScala.toMap)
+      }
       else None
     }
   }
@@ -60,9 +62,10 @@ case class KVSDbImpl(dbName: String, client: SSDB)(implicit ec: ExecutionContext
     * @param arrKeyAndValue
     * @return
     */
-  override def madd(arrKeyAndValue: Array[(String,String)]): Future[Boolean] = {
+  override def madd(arrKeyAndValue: Array[(String, String)]): Future[Boolean] = {
     Future {
-      client.multi_hset(dbName, arrKeyAndValue).ok()
+      val arrKV: Array[String] = arrKeyAndValue.flatMap(item => Array(item._1, item._2))
+      client.multi_hset(dbName, arrKV: _*).ok()
     }
   }
 
@@ -74,7 +77,7 @@ case class KVSDbImpl(dbName: String, client: SSDB)(implicit ec: ExecutionContext
 
   override def mremove(keys: Array[String]): Future[Boolean] = {
     Future {
-      client.multi_hdel(dbName, keys).ok()
+      client.multi_hdel(dbName, keys:_*).ok()
     }
   }
 
