@@ -81,7 +81,7 @@ trait KVSTestCase {
       val resp = kv.get(pair._1)
       resp.onComplete(f => {
         result &= f.isSuccess
-        result &= f.get == None
+        result &= f.get.isEmpty
       })
       Await.result(resp, timeout)
     }
