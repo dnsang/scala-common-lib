@@ -1,5 +1,6 @@
 package education.x.commons
 
+import java.math.BigInteger
 import java.nio.ByteBuffer
 
 import org.nutz.ssdb4j.spi.SSDB
@@ -11,7 +12,7 @@ trait SortedSet[Key, Value] {
 
   def get(key: Key): Future[Option[Value]]
 
-  def mget(keys: Key*): Future[Option[Map[Key, Value]]]
+  def mget(keys: Array[Key]): Future[Option[Map[Key, Value]]]
 
   def add(k: Key, v: Value): Future[Boolean]
 
@@ -21,9 +22,15 @@ trait SortedSet[Key, Value] {
 
   def mremove(keys: Array[Key]): Future[Boolean]
 
+  /** *
+    *
+    * @param key
+    * @param reverseOrder true: => lower score higher rank, false: higher score higher rank
+    * @return
+    */
   def rank(key: Key, reverseOrder: Boolean): Future[Option[Int]]
 
-  def range(from: Int, num: Int, reverseOrder: Boolean): Future[Option[Array[Key]]]
+  def range(from: Int, num: Int, reverseOrder: Boolean): Future[Option[Array[(String, Long)]]]
 
   def clear(): Future[Boolean]
 
@@ -50,7 +57,7 @@ case class SsdbSortedSet(dbName: String, client: SSDB)(implicit ec: ExecutionCon
     }
   }
 
-  override def mget(keys: String*): Future[Option[Map[String, Long]]] = {
+  override def mget(keys: Array[String]): Future[Option[Map[String, Long]]] = {
     Future {
       val resp = client.multi_zget(dbName, keys: _*)
       if (resp.ok() && resp.datas.size() % 2 == 0) {
@@ -58,7 +65,7 @@ case class SsdbSortedSet(dbName: String, client: SSDB)(implicit ec: ExecutionCon
         var map = collection.mutable.Map[String, Long]()
         val it = resp.datas.iterator
         while (it.hasNext) {
-          map.put(new String(it.next()), ByteBuffer.wrap(it.next()).getLong)
+          map.put(new String(it.next()), (new String(it.next())).toLong)
         }
         Some(map.toMap)
       }
@@ -101,11 +108,11 @@ case class SsdbSortedSet(dbName: String, client: SSDB)(implicit ec: ExecutionCon
 
   override def clear(): Future[Boolean] = {
     Future {
-      client.zclear().ok()
+      client.zclear(dbName).ok()
     }
   }
 
-  override def rank(key: String, reverseOrder: Boolean): Future[Option[Int]] = {
+  override def rank(key: String, reverseOrder: Boolean = false): Future[Option[Int]] = {
     Future {
       val resp = if (reverseOrder) {
         client.zrank(dbName, key)
@@ -117,7 +124,7 @@ case class SsdbSortedSet(dbName: String, client: SSDB)(implicit ec: ExecutionCon
     }
   }
 
-  override def range(from: Int, num: Int, reverseOrder: Boolean): Future[Option[Array[String]]] = {
+  override def range(from: Int, num: Int, reverseOrder: Boolean = false): Future[Option[Array[(String, Long)]]] = {
     Future {
       val resp = if (reverseOrder) {
         client.zrange(dbName, from, num)
@@ -125,7 +132,10 @@ case class SsdbSortedSet(dbName: String, client: SSDB)(implicit ec: ExecutionCon
         client.zrrange(dbName, from, num)
       }
       import scala.collection.JavaConverters._
-      if (resp.ok()) Some(resp.listString().asScala.toArray)
+      if (resp.ok()) Some(resp.listString()
+        .asScala.toArray
+        .grouped(2).toArray
+        .map(arr => (arr(0), arr(1).toLong)))
       else None
     }
   }
