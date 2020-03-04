@@ -8,11 +8,13 @@ I32IdGenerator
 	val id = idGen.getNextId()
 
 KeyValueDB
+
 	val kvs = KVSDbImpl("user_db",ssdb)
         kvs.add("user_id","{ json_user_value }")
 	val value = kvs.get("user_id")
 
 SortedSet
+
         val leaderboard = SSdbSortedSet("game_a",ssdb)
         leaderboard.add("user_1",100)
         val rank = leaderboard.rank("user_1")
