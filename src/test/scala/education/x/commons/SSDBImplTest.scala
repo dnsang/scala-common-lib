@@ -10,21 +10,15 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 
-class SSDBImplTest extends AnyFunSuite {
-  val ssdb: SSDB = SSDBs.pool(
-    "localhost",
-    8888,
-    5000, null)
+class SSDBImplTest extends BaseSSDBTestCase {
 
   val impl = KVSDbImpl("test", ssdb)
-  assert(ssdb.info().ok())
 
-
-  val kvsTestCase = new KVSTestCase {
+  val kvsTestCase: KVSTestCase = new KVSTestCase {
     val ssdbClient: SSDB = ssdb
     override val kv: KVSDbImpl = impl
   }
-  val data = (for (i <- 0 to 100) yield (s"key$i", s"value$i")).toArray
+  val data: Array[(String, String)] = (for (i <- 0 to 100) yield (s"key$i", s"value$i")).toArray
 
   test("test single action with ssdb") {
 

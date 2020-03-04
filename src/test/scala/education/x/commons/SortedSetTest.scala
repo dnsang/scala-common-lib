@@ -9,9 +9,6 @@ import org.scalatest.time.{Millis, Seconds, Span}
 
 class SortedSetTest extends BaseSSDBTestCase {
 
-
-  implicit val ec: ExecutionContext = ExecutionContext.global
-
   val sortedSet = SsdbSortedSet("test_sortedset", ssdb)
 
   test("crud sortedset") {

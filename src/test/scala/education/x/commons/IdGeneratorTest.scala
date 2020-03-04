@@ -8,23 +8,15 @@ import scala.collection.immutable
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-class IdGeneratorTest extends AnyFunSuite {
-  implicit val ec = ExecutionContext.global
-  val ssdb: SSDB = SSDBs.pool(
-    "localhost",
-    8888,
-    5000, null)
-
-  assert(ssdb.info().ok())
-
-
-  val idgen = I32IdGenerator("project_test", "user_id", ssdb, 1)
-  idgen.reset()
+class IdGeneratorTest extends BaseSSDBTestCase {
 
   test("generate Unique ID") {
 
+    val idGenerator = I32IdGenerator("project_test", "user_id", ssdb, 1)
+    idGenerator.reset()
+
     val nRequiredId = 1000
-    val generateIds = for (i <- 1 to nRequiredId) yield idgen.getNextId()
+    val generateIds = for (i <- 1 to nRequiredId) yield idGenerator.getNextId()
 
     val ids: Future[immutable.IndexedSeq[Option[Int]]] = Future.sequence(generateIds)
 
