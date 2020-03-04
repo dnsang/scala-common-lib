@@ -48,7 +48,7 @@ class SSDBImplTest extends BaseSSDBTestCase {
     kvsTestCase.assertSize(data.length)
 
     println(s"Assert M-Get Data")
-    assert(kvsTestCase.testMGet(data))
+    kvsTestCase.testMGet(data)
     kvsTestCase.assertSize(data.length)
     //MultiDelete Data
     println(s"Assert M-Del Data")

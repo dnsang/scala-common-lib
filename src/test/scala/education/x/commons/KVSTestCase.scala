@@ -2,6 +2,8 @@ package education.x.commons
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
+import org.scalatest.concurrent.ScalaFutures._
+import org.scalatest.time.{Millis, Seconds, Span}
 
 trait KVSTestCase {
 
@@ -88,23 +90,20 @@ trait KVSTestCase {
     result
   }
 
-  def testMGet(data: Array[(String, String)]): Boolean = {
-    var result = false
+  def testMGet(data: Array[(String, String)]): Unit = {
 
     val keys = data.map(f => f._1)
-    val resp = kv.mget(keys)
-    resp.onComplete(f => {
-      result |= f.isSuccess
-      val retrieveData = f.get.get
-      for (kv <- data) {
-        result &= retrieveData.contains(kv._1)
-        result &= retrieveData(kv._1).equals(kv._2)
+    whenReady(kv.mget(keys)) {
+      resp => {
+        assert(resp.isDefined)
+        val retrieveData = resp.get
+        for (kv <- data) {
+          assert(retrieveData.contains(kv._1))
+          assert(retrieveData(kv._1).equals(kv._2))
+        }
       }
-    })
+    }
 
-    Await.result(resp, timeout)
-
-    result
   }
 
   def assertSize(size: Int): Boolean = {
