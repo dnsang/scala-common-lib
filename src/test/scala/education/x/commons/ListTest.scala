@@ -72,13 +72,13 @@ class ListTest extends BaseSSDBTestCase {
     assert(testCase.testValueIsCorrect(data.toArray))
 
     // test get head
-    println("Test get head")
-    val head = testCase.testGetHead()
+    println("Test get front")
+    val head = testCase.testGetFront()
     assert(head == data.head)
 
     // test get tail
-    println("Test get last")
-    val last = testCase.testGetLast()
+    println("Test get back")
+    val last = testCase.testGetBack()
     assert(last == data.last)
 
     // test get all

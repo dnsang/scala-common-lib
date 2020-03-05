@@ -81,15 +81,15 @@ trait ListTestCase[T] {
     r
   }
 
-  def testGetHead() : T = {
-    val fn = client.head()
+  def testGetFront() : T = {
+    val fn = client.getFront()
     val r = Await.result(fn, duration)
     assert(r.isDefined)
     r.get
   }
 
-  def testGetLast(): T = {
-    val fn = client.last()
+  def testGetBack(): T = {
+    val fn = client.getBack()
     val r = Await.result(fn, duration)
     assert(r.isDefined)
     r.get

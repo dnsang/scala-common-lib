@@ -26,9 +26,9 @@ trait List[T] {
 
   def get(index: Int): Future[Option[T]]
 
-  def head(): Future[Option[T]]
+  def getFront(): Future[Option[T]]
 
-  def last(): Future[Option[T]]
+  def getBack(): Future[Option[T]]
 
   def get(from: Int, num: Int): Future[Option[Array[T]]]
 
@@ -115,12 +115,12 @@ case class List32Impl(dbname: String, client: SSDB)(implicit ec: ExecutionContex
   }
 
 
-  override def head(): Future[Option[Int]] = Future {
+  override def getFront(): Future[Option[Int]] = Future {
     val r = client.qget(dbname, 0)
     r.getIntAsOption()
   }
 
-  override def last(): Future[Option[Int]] = Future {
+  override def getBack(): Future[Option[Int]] = Future {
     val r = client.qsize(dbname)
     if (r.ok())
       client.qget(dbname, r.asInt() - 1).getIntAsOption()
@@ -166,9 +166,9 @@ case class ListStringImpl(dbname: String, client: SSDB)(implicit ec: ExecutionCo
 
   override def set(index: Int, value: String): Future[Boolean] = ???
 
-  override def head(): Future[Option[String]] = ???
+  override def getFront(): Future[Option[String]] = ???
 
-  override def last(): Future[Option[String]] = ???
+  override def getBack(): Future[Option[String]] = ???
 
   override def getAll(): Future[Option[Array[String]]] = ???
 }
