@@ -26,6 +26,20 @@ object Implicits {
         Some(items.toArray)
       } else None
     }
+
+    def getStringAsOption(): Option[String] = {
+      if (r.ok())
+        Some(r.asString())
+      else
+        None
+    }
+
+    def getArrayStringAsOption(): Option[Array[String]] = {
+      if (r.ok())
+        Some(r.listString().asScala.toArray)
+      else
+        None
+    }
   }
 
   implicit class ImplicitSSDB(client: SSDB) {

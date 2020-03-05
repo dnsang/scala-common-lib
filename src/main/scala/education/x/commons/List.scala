@@ -112,24 +112,50 @@ case class ListStringImpl(dbname: String, client: SSDB)(implicit ec: ExecutionCo
     r.getIntAsOption()
   }
 
-  override def popFront(): Future[Option[String]] = {
-
+  override def popFront(): Future[Option[String]] = Future {
+    val r = client.qpop_front(dbname)
+    r.getStringAsOption()
   }
 
-  override def popBack(): Future[Option[String]] = ???
+  override def popBack(): Future[Option[String]] = Future {
+    val r = client.qpop_back(dbname)
+    r.getStringAsOption()
+  }
 
-  override def clear(): Future[Boolean] = ???
+  override def clear(): Future[Boolean] = Future {
+    client.qclear().ok()
+  }
 
-  override def get(index: Int): Future[Option[String]] = ???
+  override def get(index: Int): Future[Option[String]] = Future {
+    val r = client.qget(dbname, index)
+    r.getStringAsOption()
+  }
 
-  override def get(from: Int, num: Int): Future[Option[Array[String]]] = ???
+  override def get(from: Int, num: Int): Future[Option[Array[String]]] = Future {
+    val r = client.qrange(dbname, from, num)
+    r.getArrayStringAsOption()
+  }
 
-  override def set(index: Int, value: String): Future[Boolean] = ???
+  override def set(index: Int, value: String): Future[Boolean] = Future {
+    client.qset(dbname, index, value).ok()
+  }
 
-  override def getFront(): Future[Option[String]] = ???
+  override def getFront(): Future[Option[String]] = Future {
+    val r = client.qfront(dbname)
+    r.getStringAsOption()
+  }
 
-  override def getBack(): Future[Option[String]] = ???
+  override def getBack(): Future[Option[String]] = Future {
+    val r = client.qback(dbname)
+    r.getStringAsOption()
+  }
 
-  override def getAll(): Future[Option[Array[String]]] = ???
+  override def getAll(): Future[Option[Array[String]]] = Future {
+    val r = client.qsize(dbname)
+    if (r.ok())
+      client.qrange(dbname, 0, r.asInt()).getArrayStringAsOption()
+    else
+      None
+  }
 }
 
