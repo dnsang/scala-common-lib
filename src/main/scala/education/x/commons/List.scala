@@ -120,7 +120,7 @@ case class ListStringImpl(dbname: String, client: SSDB)(implicit ec: ExecutionCo
   }
 
   override def clear(): Future[Boolean] = Future {
-    client.qclear().ok()
+    client.qclear(dbname).ok()
   }
 
   override def get(index: Int): Future[Option[String]] = Future {
