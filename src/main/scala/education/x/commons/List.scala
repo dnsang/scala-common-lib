@@ -138,14 +138,23 @@ case class List32Impl(dbname: String, client: SSDB)(implicit ec: ExecutionContex
 }
 
 
-class ListStringImpl extends List[String] {
-  override def pushFront(value: String): Future[Boolean] = ???
+case class ListStringImpl(dbname: String, client: SSDB)(implicit ec: ExecutionContext = ExecutionContext.global) extends List[String] {
+  override def pushFront(value: String): Future[Boolean] = Future {
+    client.qpush_front(dbname, value).ok()
+  }
 
-  override def pushBack(value: String): Future[Boolean] = ???
+  override def pushBack(value: String): Future[Boolean] = Future {
+    client.qpush_back(dbname, value).ok()
+  }
 
-  override def size(): Future[Option[Int]] = ???
+  override def size(): Future[Option[Int]] = Future {
+    val r = client.qsize(dbname)
+    r.getIntAsOption()
+  }
 
-  override def popFront(): Future[Option[String]] = ???
+  override def popFront(): Future[Option[String]] = {
+
+  }
 
   override def popBack(): Future[Option[String]] = ???
 
