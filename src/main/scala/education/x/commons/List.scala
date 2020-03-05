@@ -76,16 +76,13 @@ case class List32Impl(dbname: String, client: SSDB)(implicit ec: ExecutionContex
 
 
   override def getFront(): Future[Option[Int]] = Future {
-    val r = client.qget(dbname, 0)
+    val r = client.qfront(dbname)
     r.getIntAsOption()
   }
 
   override def getBack(): Future[Option[Int]] = Future {
-    val r = client.qsize(dbname)
-    if (r.ok())
-      client.qget(dbname, r.asInt() - 1).getIntAsOption()
-    else
-      None
+    val r = client.qback(dbname)
+    r.getIntAsOption()
   }
 
   override def getAll(): Future[Option[Array[Int]]] = Future {
