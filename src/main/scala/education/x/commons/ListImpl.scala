@@ -90,3 +90,7 @@ abstract class ListImpl[T: ClassTag](dbname: String, client: SSDB)(
   }
 
 }
+
+case class List32Impl(dbname: String, client: SSDB)(implicit ev: ClassTag[Int]) extends ListImpl[Int](dbname, client)(ev, value => value.toString.getBytes(), bytes => Integer.parseInt(new String(bytes)))
+
+case class ListStringImpl(dbname: String, client: SSDB)(implicit ev: ClassTag[String]) extends ListImpl[String](dbname, client)(ev, value => value.toString.getBytes(), bytes => new String(bytes))

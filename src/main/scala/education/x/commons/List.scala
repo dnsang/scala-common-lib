@@ -1,10 +1,6 @@
 package education.x.commons
 
-import education.x.ultis.Implicits._
-import org.nutz.ssdb4j.spi.SSDB
-
-import scala.concurrent.{ExecutionContext, Future}
-import scala.reflect.ClassTag
+import scala.concurrent.Future
 
 trait List[T] {
 
@@ -32,7 +28,3 @@ trait List[T] {
 
   def getAll(): Future[Option[Array[T]]]
 }
-
-case class List32Impl(dbname: String, client: SSDB)(implicit ev: ClassTag[Int]) extends ListImpl[Int](dbname, client)(ev, value => value.toString.getBytes(), bytes => Integer.parseInt(new String(bytes)))
-
-case class ListStringImpl(dbname: String, client: SSDB)(implicit ev: ClassTag[String]) extends ListImpl[String](dbname, client)(ev, value => value.toString.getBytes(), bytes => new String(bytes))
