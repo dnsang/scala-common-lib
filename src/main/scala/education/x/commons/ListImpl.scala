@@ -5,8 +5,9 @@ import org.nutz.ssdb4j.spi.{Cmd, ObjectConv, Response, SSDB}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.collection.JavaConverters.collectionAsScalaIterableConverter
+import scala.reflect.ClassTag
 
-abstract class ListImpl[T](dbname: String, client: SSDB)(
+abstract class ListImpl[T: ClassTag](dbname: String, client: SSDB)(
   implicit toByte: T => Array[Byte],
   fromByte: Array[Byte] => T,
   ec: ExecutionContext = ExecutionContext.global
@@ -50,7 +51,7 @@ abstract class ListImpl[T](dbname: String, client: SSDB)(
   }
 
   override def set(index: Int, value: T): Future[Boolean] = Future {
-    client.qset(dbname, index, value).ok()
+    client.qset(dbname, index, toByte(value)).ok()
   }
 
 
