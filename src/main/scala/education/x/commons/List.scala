@@ -8,11 +8,19 @@ trait List[T] {
 
   def pushBack(value: T): Future[Boolean]
 
+  def multiPushFront(values: Array[T]): Future[Boolean]
+
+  def multiPushBack(values: Array[T]): Future[Boolean]
+
   def size(): Future[Option[Int]]
 
   def popFront(): Future[Option[T]]
 
   def popBack(): Future[Option[T]]
+
+  def multiPopFront(size: Int): Future[Option[Array[T]]]
+
+  def multiPopBack(size: Int): Future[Option[Array[T]]]
 
   def clear(): Future[Boolean]
 
