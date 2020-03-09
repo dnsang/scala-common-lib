@@ -1,5 +1,7 @@
 package education.x.commons
 
+import education.x.commons.list.List
+
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.control.Breaks

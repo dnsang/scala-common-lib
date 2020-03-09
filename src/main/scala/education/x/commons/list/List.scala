@@ -1,7 +1,11 @@
-package education.x.commons
+package education.x.commons.list
 
 import scala.concurrent.Future
 
+/**
+* @author tvc12 - thienvc
+* @since  09/03/2020
+*/
 trait List[T] {
 
   def pushFront(value: T): Future[Boolean]

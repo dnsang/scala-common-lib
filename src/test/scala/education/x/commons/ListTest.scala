@@ -1,5 +1,7 @@
 package education.x.commons
 
+import education.x.commons.list.{ListDb16, ListDb32, ListDb64, ListDbBoolean, ListDbDouble, ListDbFloat, ListDbString}
+
 import scala.collection.mutable.ListBuffer
 import scala.reflect.ClassTag
 import scala.util.Random
@@ -27,26 +29,46 @@ class ListTest extends BaseSSDBTestCase {
     Random.nextString(50)
   }
 
-  test("Test List32Impl") {
-    val list32 = List32Impl("list32", ssdb)
+  test("Test List Boolean") {
+    val listBool= ListDbBoolean("list_bool", ssdb)
+    runTestCase[Boolean](listBool, () => Random.nextBoolean())
+  }
+
+  test("Test List16") {
+    val list16 = ListDb16("list16", ssdb)
+    runTestCase[Short](list16, () => Random.nextInt().toShort)
+  }
+
+  test("Test List32") {
+    val list32 = ListDb32("list32", ssdb)
     runTestCase[Int](list32, getRandomInt)
   }
 
-  test("Test List64Impl") {
-    val list64 = List64Impl("list64", ssdb)
+  test("Test List64") {
+    val list64 = ListDb64("list64", ssdb)
     runTestCase[Long](list64, () => Random.nextLong())
   }
 
+  test("Test List Float") {
+    val listDbFloat = ListDbFloat("list_float", ssdb)
+    runTestCase[Float](listDbFloat, () => Random.nextFloat())
+  }
+
+  test("Test List Double") {
+    val listDbDouble = ListDbDouble("list_long", ssdb)
+    runTestCase[Double](listDbDouble, () => Random.nextDouble())
+  }
+
   test("Test ListStringImpl") {
-    val stringImpl = ListStringImpl("list_string_impl", ssdb)
+    val stringImpl = ListDbString("list_string_impl", ssdb)
     runTestCase[String](stringImpl, getRandomString)
   }
 
 
-  def runTestCase[T: ClassTag](listImpl: List[T], getDataTest: () => T): Unit = {
+  def runTestCase[T: ClassTag](listImpl: list.List[T], getDataTest: () => T): Unit = {
     var data = ListBuffer.empty[T]
     val testCase = new ListTestCase[T]() {
-      override val client: List[T] = listImpl
+      override val client: list.List[T] = listImpl
     }
 
     println("Prepare SSDB")

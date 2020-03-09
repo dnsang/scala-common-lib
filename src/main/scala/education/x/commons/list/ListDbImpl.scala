@@ -1,13 +1,13 @@
-package education.x.commons
+package education.x.commons.list
 
 import org.nutz.ssdb4j.impl.DefaultObjectConv
 import org.nutz.ssdb4j.spi.{Cmd, ObjectConv, Response, SSDB}
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.collection.JavaConverters.collectionAsScalaIterableConverter
+import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
-abstract class ListImpl[T: ClassTag](dbname: String, client: SSDB)(
+abstract class ListDbImpl[T: ClassTag](dbname: String, client: SSDB)(
   implicit toByte: T => Array[Byte],
   fromByte: Array[Byte] => T,
   ec: ExecutionContext = ExecutionContext.global
@@ -148,25 +148,3 @@ abstract class ListImpl[T: ClassTag](dbname: String, client: SSDB)(
     }
   }
 }
-
-case class List32Impl(dbname: String, client: SSDB)(implicit ev: ClassTag[Int])
-    extends ListImpl[Int](dbname, client)(
-      ev,
-      value => value.toString.getBytes(),
-      bytes => new String(bytes).toInt
-    )
-
-case class List64Impl(dbname: String, client: SSDB)(implicit ev: ClassTag[Long])
-    extends ListImpl[Long](dbname, client)(
-      ev,
-      value => value.toString.getBytes(),
-      bytes => new String(bytes).toLong
-    )
-
-case class ListStringImpl(dbname: String, client: SSDB)(
-  implicit ev: ClassTag[String]
-) extends ListImpl[String](dbname, client)(
-      ev,
-      value => value.toString.getBytes(),
-      bytes => new String(bytes)
-    )
