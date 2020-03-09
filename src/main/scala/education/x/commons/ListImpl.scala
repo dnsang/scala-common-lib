@@ -23,12 +23,12 @@ abstract class ListImpl[T: ClassTag](dbname: String, client: SSDB)(
 
   override def multiPushFront(values: Array[T]): Future[Boolean] = Future {
     val bytes = values.map(toByte)
-    client.multi_push_front(dbname, bytes).ok()
+    client.multi_push_front(dbname, bytes: _*).ok()
   }
 
   override def multiPushBack(values: Array[T]): Future[Boolean] = Future {
     val bytes = values.map(toByte)
-    client.multi_push_back(dbname, bytes).ok()
+    client.multi_push_back(dbname, bytes: _*).ok()
   }
 
   override def size(): Future[Option[Int]] = Future {
@@ -88,7 +88,7 @@ abstract class ListImpl[T: ClassTag](dbname: String, client: SSDB)(
     val r = client.qsize(dbname)
     if (r.ok()) {
       val r2 = client.qrange(dbname, 0, r.asInt())
-      getArrayValueAsOption(r)
+      getArrayValueAsOption(r2)
     } else {
       None
     }
@@ -112,7 +112,7 @@ abstract class ListImpl[T: ClassTag](dbname: String, client: SSDB)(
     private val converter: ObjectConv = new DefaultObjectConv()
 
     private def bytes(obj: Any): Array[Byte] = converter.bytes(obj)
-    private def bytess(obj: Any*): Array[Array[Byte]] = converter.bytess(obj)
+    private def bytess(obj: Object*) = converter.bytess(obj: _*)
 
     def qset(key: Any, index: Int, value: Any): Response = {
       val keyAsBytes = bytes(key)
@@ -121,16 +121,18 @@ abstract class ListImpl[T: ClassTag](dbname: String, client: SSDB)(
       client.req(cmdSet, keyAsBytes, indexAsBytes, valueAsBytes)
     }
 
-    def multi_push_front(key: Any, values: Any*): Response = {
+    def multi_push_front(key: Any, values: Object*): Response = {
       val keyAsBytes = bytes(key)
-      val valuesAsBytes = bytess(values)
-      client.req(qpush_front, Array(keyAsBytes, valuesAsBytes))
+      val valuesAsBytes = bytess(values: _*)
+      val input = keyAsBytes +: valuesAsBytes
+      client.req(qpush_front, input: _*)
     }
 
-    def multi_push_back(key: Any, values: Any*): Response = {
+    def multi_push_back(key: Any, values: Object*): Response = {
       val keyAsBytes = bytes(key)
-      val valuesAsBytes = bytess(values)
-      client.req(qpush_back, Array(keyAsBytes, valuesAsBytes))
+      val valuesAsBytes = bytess(values: _*)
+      val input = keyAsBytes +: valuesAsBytes
+      client.req(qpush_back, input: _*)
     }
 
     def multi_pop_front(key: Any, size: Int): Response = {

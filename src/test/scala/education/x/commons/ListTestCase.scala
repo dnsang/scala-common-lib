@@ -37,6 +37,16 @@ trait ListTestCase[T] {
     !hasFailure
   }
 
+  def testMultiPushFront(values: Array[T]): Boolean = {
+    val r = client.multiPushFront(values)
+    Await.result(r, duration)
+  }
+
+  def testMultiPushBack(values: Array[T]): Boolean = {
+    val r = client.multiPushBack(values)
+    Await.result(r, duration)
+  }
+
   def testPopFront(num: Int): Boolean = {
     val r = for (times <- 0 until num) yield {
         val fn = client.popFront()
@@ -46,6 +56,11 @@ trait ListTestCase[T] {
     !hasError
   }
 
+  def testMultiPopFront(num: Int): Boolean = {
+    val r = client.multiPopFront(num)
+    Await.result(r, duration).isDefined
+  }
+
   def testPopBack(num: Int): Boolean = {
     val r = for (times <- 0 until num) yield {
       val fn = client.popBack()
@@ -53,6 +68,11 @@ trait ListTestCase[T] {
     }
     val hasError = r.contains(false)
     !hasError
+  }
+
+  def testMultiPopBack(num: Int): Boolean = {
+    val r = client.multiPopBack(num)
+    Await.result(r, duration).isDefined
   }
 
   def testGetSize(): Boolean = {
