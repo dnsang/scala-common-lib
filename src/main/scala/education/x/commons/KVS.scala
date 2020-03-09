@@ -1,10 +1,10 @@
 package education.x.commons
 
+import org.nutz.ssdb4j.SSDBs
 import org.nutz.ssdb4j.spi.{Response, SSDB}
 
+import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.concurrent.{ExecutionContext, Future}
-import scala.collection.JavaConverters.{asScalaBufferConverter, mapAsScalaMapConverter}
-import scala.collection.mutable
 import scala.reflect.ClassTag
 
 trait KVS[Key, Value] {
@@ -27,9 +27,8 @@ trait KVS[Key, Value] {
 
 }
 
-
-
-abstract class KVSImpl[Key: ClassTag, Value: ClassTag](dbName: String, client: SSDB)(
+abstract class KVSImpl[Key: ClassTag, Value: ClassTag](dbName: String,
+                                                       client: SSDB)(
   implicit keyToByte: Key => Array[Byte],
   byteToKey: Array[Byte] => Key,
   valueToByte: Value => Array[Byte],
@@ -81,7 +80,7 @@ abstract class KVSImpl[Key: ClassTag, Value: ClassTag](dbName: String, client: S
     }
 
   override def remove(key: Key): Future[Boolean] = Future {
-    client.multi_hdel(dbName, key).ok()
+    client.multi_hdel(dbName, keyToByte(key)).ok()
   }
 
   override def multiRemove(keys: Array[Key]): Future[Boolean] = Future {
@@ -101,11 +100,53 @@ abstract class KVSImpl[Key: ClassTag, Value: ClassTag](dbName: String, client: S
 }
 
 object KVSDBImpl {
-  def keyToByte(key: String) = key.getBytes()
-  def valueToByte(value: String) = value.getBytes()
+  private val charset = SSDBs.DEFAULT_CHARSET
+  def stringToBytes(value: String): Array[Byte] = value.getBytes()
 
-  def
+  def bytesToString(bytes: Array[Byte]): String = new String(bytes, charset)
+
+  def apply(dbname: String, host: String, port: Int, timeout: Int = 5000)(
+    implicit evKey: ClassTag[String],
+    evValue: ClassTag[String]
+  ): KVSDBImpl = {
+    val ssdb = SSDBs.pool(host, port, timeout, null)
+    new KVSDBImpl(dbname, ssdb)(evKey, evValue)
+  }
 }
 
-case class KVSDBImpl(dbname: String, client: SSDB) (implicit evKey: ClassTag[String], evValue: ClassTag[String])
-        extends KVSImpl[String, String](dbname, client)(evKey, evValue, KVSDBImpl.keyToByte)
+case class KVSDBImpl(dbname: String, client: SSDB)(
+  implicit evKey: ClassTag[String],
+  evValue: ClassTag[String]
+) extends KVSImpl[String, String](dbname, client)(
+      evKey,
+      evValue,
+      keyToByte = KVSDBImpl.stringToBytes,
+      valueToByte = KVSDBImpl.stringToBytes,
+      byteToValue = KVSDBImpl.bytesToString,
+      byteToKey = KVSDBImpl.bytesToString
+    )
+
+object KVIntDBImpl {
+  def intToByte(value: Int): Array[Byte] = String.valueOf(value).getBytes()
+  def byteToInt(bytes: Array[Byte]): Int = new String(bytes).toInt
+
+  def apply(dbname: String, host: String, port: Int, timeout: Int = 5000)(
+          implicit evKey: ClassTag[String],
+          evValue: ClassTag[Int]
+  ): KVIntDBImpl = {
+    val ssdb = SSDBs.pool(host, port, timeout, null)
+    new KVIntDBImpl(dbname, ssdb)(evKey, evValue)
+  }
+}
+
+case class KVIntDBImpl(dbname: String, client: SSDB)(
+        implicit evKey: ClassTag[String],
+        evValue: ClassTag[Int]
+) extends KVSImpl[String, Int](dbname, client)(
+  evKey,
+  evValue,
+  keyToByte = KVSDBImpl.stringToBytes,
+  valueToByte = KVIntDBImpl.intToByte,
+  byteToValue = KVIntDBImpl.byteToInt,
+  byteToKey = KVSDBImpl.bytesToString
+)
