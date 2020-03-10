@@ -1,98 +1,152 @@
 package education.x.commons
 
-import org.nutz.ssdb4j.spi.SSDB
+import org.nutz.ssdb4j.SSDBs
+import org.nutz.ssdb4j.spi.{Response, SSDB}
 
+import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.concurrent.{ExecutionContext, Future}
-import scala.collection.JavaConverters.mapAsScalaMapConverter
+import scala.reflect.ClassTag
 
 trait KVS[Key, Value] {
 
   def get(key: Key): Future[Option[Value]]
 
-  def mget(keys: Array[Key]): Future[Option[Map[Key, Value]]]
+  def multiGet(keys: Array[Key]): Future[Option[Map[Key, Value]]]
 
   def add(k: Key, v: Value): Future[Boolean]
 
-  def madd(arrKeyAndValue: Array[(Key, Value)]): Future[Boolean]
+  def multiAdd(arrKeyAndValue: Array[(Key, Value)]): Future[Boolean]
 
   def remove(key: Key): Future[Boolean]
 
-  def mremove(keys: Array[Key]): Future[Boolean]
+  def multiRemove(keys: Array[Key]): Future[Boolean]
 
   def size(): Future[Option[Int]]
 
   def clear(): Future[Boolean]
 
-
 }
 
-
-case class KVSDbImpl(dbName: String, client: SSDB)(implicit ec: ExecutionContext = ExecutionContext.global) extends KVS[String, String] {
-
-  override def get(key: String): Future[Option[String]] = {
-    Future {
-      val resp = client.hget(dbName, key)
-      if (resp.ok())
-        Some(resp.asString())
-      else
-        None
-    }
+abstract class KVSImpl[Key: ClassTag, Value: ClassTag](dbName: String,
+                                                       client: SSDB)(
+  implicit keyToByte: Key => Array[Byte],
+  byteToKey: Array[Byte] => Key,
+  valueToByte: Value => Array[Byte],
+  byteToValue: Array[Byte] => Value,
+  ec: ExecutionContext = ExecutionContext.global
+) extends KVS[Key, Value] {
+  private def getValueAsOption(r: Response): Option[Value] = {
+    if (r.ok() && r.datas.size() == 1) {
+      Some(byteToValue(r.datas.get(0)))
+    } else None
   }
 
-  override def mget(keys: Array[String]): Future[Option[Map[String, String]]] = {
-    Future {
-      val resp = client.multi_hget(dbName, keys:_*)
-      if (resp.ok()) {
-        Some(resp.mapString().asScala.toMap)
-      }
-      else None
-    }
+  private def getMapKeyValueAsOption(r: Response): Option[Map[Key, Value]] = {
+    if (r.ok() && r.datas.size() % 2 == 0) {
+      val keyValues = r.datas.asScala.grouped(2)
+      val map = keyValues
+        .map(grouped => {
+          val key = byteToKey(grouped.head)
+          val value = byteToValue(grouped.last)
+          key -> value
+        })
+        .toMap
+      Some(map)
+    } else None
   }
 
-  override def add(k: String, v: String): Future[Boolean] = {
-    Future {
-      client.hset(dbName, k, v).ok()
-    }
+  override def get(key: Key): Future[Option[Value]] = Future {
+    val resp = client.hget(dbName, keyToByte(key))
+    getValueAsOption(resp)
   }
 
-
-  /**
-    * ex: SSDB::madd(k1,v1,k2,v2,k3,v3)
-    *
-    * @param arrKeyAndValue
-    * @return
-    */
-  override def madd(arrKeyAndValue: Array[(String, String)]): Future[Boolean] = {
+  override def multiGet(keys: Array[Key]): Future[Option[Map[Key, Value]]] =
     Future {
-      val arrKV: Array[String] = arrKeyAndValue.flatMap(item => Array(item._1, item._2))
+      val keysAsBytes = keys.map(keyToByte)
+      val resp = client.multi_hget(dbName, keysAsBytes: _*)
+      getMapKeyValueAsOption(resp)
+    }
+
+  override def add(key: Key, value: Value): Future[Boolean] = Future {
+    client.hset(dbName, keyToByte(key), valueToByte(value)).ok()
+  }
+
+  override def multiAdd(arrKeyAndValue: Array[(Key, Value)]): Future[Boolean] =
+    Future {
+      val arrKV = arrKeyAndValue.flatMap(
+        item => Array(keyToByte(item._1), valueToByte(item._2))
+      )
       client.multi_hset(dbName, arrKV: _*).ok()
     }
+
+  override def remove(key: Key): Future[Boolean] = Future {
+    client.multi_hdel(dbName, keyToByte(key)).ok()
   }
 
-  override def remove(key: String): Future[Boolean] = {
-    Future {
-      client.multi_hdel(dbName, key).ok()
-    }
+  override def multiRemove(keys: Array[Key]): Future[Boolean] = Future {
+    val keysAsBytes = keys.map(keyToByte)
+    client.multi_hdel(dbName, keysAsBytes: _*).ok()
   }
 
-  override def mremove(keys: Array[String]): Future[Boolean] = {
-    Future {
-      client.multi_hdel(dbName, keys:_*).ok()
-    }
+  override def size(): Future[Option[Int]] = Future {
+    val resp = client.hsize(dbName)
+    if (resp.ok()) Some(resp.asInt())
+    else None
   }
 
-  override def size(): Future[Option[Int]] = {
-    Future {
-      val resp = client.hsize(dbName)
-      if (resp.ok()) Some(resp.asInt())
-      else None
-
-    }
-  }
-
-  override def clear(): Future[Boolean] = {
-    Future {
-      client.hclear(dbName).ok()
-    }
+  override def clear(): Future[Boolean] = Future {
+    client.hclear(dbName).ok()
   }
 }
+
+object KVSDBImpl {
+  private val charset = SSDBs.DEFAULT_CHARSET
+  def stringToBytes(value: String): Array[Byte] = value.getBytes()
+
+  def bytesToString(bytes: Array[Byte]): String = new String(bytes, charset)
+
+  def apply(dbname: String, host: String, port: Int, timeout: Int = 5000)(
+    implicit evKey: ClassTag[String],
+    evValue: ClassTag[String]
+  ): KVSDBImpl = {
+    val ssdb = SSDBs.pool(host, port, timeout, null)
+    new KVSDBImpl(dbname, ssdb)(evKey, evValue)
+  }
+}
+
+case class KVSDBImpl(dbname: String, client: SSDB)(
+  implicit evKey: ClassTag[String],
+  evValue: ClassTag[String]
+) extends KVSImpl[String, String](dbname, client)(
+      evKey,
+      evValue,
+      keyToByte = KVSDBImpl.stringToBytes,
+      valueToByte = KVSDBImpl.stringToBytes,
+      byteToValue = KVSDBImpl.bytesToString,
+      byteToKey = KVSDBImpl.bytesToString
+    )
+
+object KVIntDBImpl {
+  def intToByte(value: Int): Array[Byte] = String.valueOf(value).getBytes()
+  def byteToInt(bytes: Array[Byte]): Int = new String(bytes).toInt
+
+  def apply(dbname: String, host: String, port: Int, timeout: Int = 5000)(
+          implicit evKey: ClassTag[String],
+          evValue: ClassTag[Int]
+  ): KVIntDBImpl = {
+    val ssdb = SSDBs.pool(host, port, timeout, null)
+    new KVIntDBImpl(dbname, ssdb)(evKey, evValue)
+  }
+}
+
+case class KVIntDBImpl(dbname: String, client: SSDB)(
+        implicit evKey: ClassTag[String],
+        evValue: ClassTag[Int]
+) extends KVSImpl[String, Int](dbname, client)(
+  evKey,
+  evValue,
+  keyToByte = KVSDBImpl.stringToBytes,
+  valueToByte = KVIntDBImpl.intToByte,
+  byteToValue = KVIntDBImpl.byteToInt,
+  byteToKey = KVSDBImpl.bytesToString
+)

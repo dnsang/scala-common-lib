@@ -28,7 +28,7 @@ trait KVSTestCase {
 
   def testMultiAdd(data: Array[(String, String)]): Boolean = {
 
-    val resp = kv.madd(data)
+    val resp = kv.multiAdd(data)
     resp.onComplete(f => {
       assert(f.isSuccess)
     })
@@ -67,7 +67,7 @@ trait KVSTestCase {
   def testMDelete(data: Array[(String, String)]): Boolean = {
     var result = true
 
-    val resp = kv.mremove(data.map(item => item._1))
+    val resp = kv.multiRemove(data.map(item => item._1))
     resp.onComplete(f => {
       result &= f.isSuccess
       result &= f.get
@@ -93,7 +93,7 @@ trait KVSTestCase {
   def testMGet(data: Array[(String, String)]): Unit = {
 
     val keys = data.map(f => f._1)
-    whenReady(kv.mget(keys)) {
+    whenReady(kv.multiGet(keys)) {
       resp => {
         assert(resp.isDefined)
         val retrieveData = resp.get

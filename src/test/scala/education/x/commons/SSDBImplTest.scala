@@ -2,9 +2,7 @@ package education.x.commons
 
 import java.util.concurrent.TimeUnit
 
-import org.nutz.ssdb4j.SSDBs
 import org.nutz.ssdb4j.spi.SSDB
-import org.scalatest.funsuite.AnyFunSuite
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -12,11 +10,11 @@ import scala.concurrent.duration.Duration
 
 class SSDBImplTest extends BaseSSDBTestCase {
 
-  val impl = KVSDbImpl("test", ssdb)
+  val impl = KVSDBImpl("test", ssdb)
 
   val kvsTestCase: KVSTestCase = new KVSTestCase {
     val ssdbClient: SSDB = ssdb
-    override val kv: KVSDbImpl = impl
+    override val kv: KVSImpl[String, String] = impl
   }
   val data: Array[(String, String)] = (for (i <- 0 to 100) yield (s"key$i", s"value$i")).toArray
 
