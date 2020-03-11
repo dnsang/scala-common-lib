@@ -1,6 +1,6 @@
 package education.x.commons
 
-import education.x.commons.list.{ListDb16, ListDb32, ListDb64, ListDbBoolean, ListDbDouble, ListDbFloat, ListDbString}
+import education.x.commons.list._
 
 import scala.collection.mutable.ListBuffer
 import scala.reflect.ClassTag
@@ -8,7 +8,7 @@ import scala.util.Random
 
 /**
   * @author tvc12 - thienvc
-  * @since  05/03/2020
+  * @since 05/03/2020
   */
 class ListTest extends BaseSSDBTestCase {
 
@@ -29,8 +29,16 @@ class ListTest extends BaseSSDBTestCase {
     Random.nextString(50)
   }
 
+  test("constructor") {
+
+    val xlist = new ListDbImpl[Int]("test", ssdb)
+    xlist.pushFront(1)
+
+
+  }
+
   test("Test List Boolean") {
-    val listBool= ListDbBoolean("list_bool", ssdb)
+    val listBool = ListDbBoolean("list_bool", ssdb)
     runTestCase[Boolean](listBool, () => Random.nextBoolean())
   }
 

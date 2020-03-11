@@ -18,7 +18,7 @@ class SortedSetTest extends BaseSSDBTestCase {
 
     val nRecords = 100
 
-    println(s"Add $nRecords to sortedset")
+    println(s"Add $nRecords toByte sortedset")
 
     val data: immutable.Seq[(String, Long)] = for (i <- 1 to nRecords) yield (s"user$i", i.toLong)
 
@@ -107,7 +107,7 @@ class SortedSetTest extends BaseSSDBTestCase {
 
     val nRecords = 100
 
-    println(s"MAdd $nRecords to Set")
+    println(s"MAdd $nRecords toByte Set")
 
     val data: Array[(String, Long)] = (for (i <- 1 to nRecords) yield (s"muser$i", i.toLong)).toArray
 
