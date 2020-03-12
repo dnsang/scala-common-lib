@@ -5,6 +5,7 @@ import education.x.commons.list._
 import scala.collection.mutable.ListBuffer
 import scala.reflect.ClassTag
 import scala.util.Random
+import SSDBList._
 
 /**
   * @author tvc12 - thienvc
@@ -29,46 +30,43 @@ class ListTest extends BaseSSDBTestCase {
     Random.nextString(50)
   }
 
-  test("constructor") {
-
-    val xlist = new ListDbImpl[Int]("test", ssdb)
-    xlist.pushFront(1)
-
-
+  test("Test multiple constructor") {
   }
 
   test("Test List Boolean") {
-    val listBool = ListDbBoolean("list_bool", ssdb)
+    val listBool = SSDBList[Boolean]("list_boolean", ssdb)
     runTestCase[Boolean](listBool, () => Random.nextBoolean())
   }
 
-  test("Test List16") {
-    val list16 = ListDb16("list16", ssdb)
+  test("Test List Short") {
+    val list16 = SSDBList[Short]("list16", ssdb)
     runTestCase[Short](list16, () => Random.nextInt().toShort)
   }
 
-  test("Test List32") {
-    val list32 = ListDb32("list32", ssdb)
+  test("Test List Int") {
+
+    val list32 = SSDBList[Int]("list32", ssdb)
     runTestCase[Int](list32, getRandomInt)
   }
 
-  test("Test List64") {
-    val list64 = ListDb64("list64", ssdb)
+  test("Test List Long") {
+    val list64 = SSDBList[Long]("list64", ssdb)
     runTestCase[Long](list64, () => Random.nextLong())
   }
 
   test("Test List Float") {
-    val listDbFloat = ListDbFloat("list_float", ssdb)
+
+    val listDbFloat = SSDBList[Float]("list_float", ssdb)
     runTestCase[Float](listDbFloat, () => Random.nextFloat())
   }
 
   test("Test List Double") {
-    val listDbDouble = ListDbDouble("list_long", ssdb)
+    val listDbDouble = SSDBList[Double]("list_double", ssdb)
     runTestCase[Double](listDbDouble, () => Random.nextDouble())
   }
 
   test("Test ListStringImpl") {
-    val stringImpl = ListDbString("list_string_impl", ssdb)
+    val stringImpl = SSDBList[String]("list_string_impl", ssdb)
     runTestCase[String](stringImpl, getRandomString)
   }
 
