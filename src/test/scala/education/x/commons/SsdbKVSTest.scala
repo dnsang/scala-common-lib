@@ -8,13 +8,13 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 
-class SSDBImplTest extends BaseSSDBTestCase {
+class SsdbKVSTest extends BaseSSDBTestCase {
 
-  val impl = KVSDBImpl("test", ssdb)
+  val impl = SsdbKVS[String, String]("test", ssdb)
 
   val kvsTestCase: KVSTestCase = new KVSTestCase {
     val ssdbClient: SSDB = ssdb
-    override val kv: KVSImpl[String, String] = impl
+    override val kv: SsdbKVS[String, String] = impl
   }
   val data: Array[(String, String)] = (for (i <- 0 to 100) yield (s"key$i", s"value$i")).toArray
 

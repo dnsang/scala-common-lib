@@ -33,39 +33,39 @@ class ListTest extends BaseSSDBTestCase {
   }
 
   test("Test List Boolean") {
-    val listBool = SSDBList[Boolean]("list_boolean", ssdb)
+    val listBool = SsdbList[Boolean]("list_boolean", ssdb)
     runTestCase[Boolean](listBool, () => Random.nextBoolean())
   }
 
   test("Test List Short") {
-    val list16 = SSDBList[Short]("list16", ssdb)
+    val list16 = SsdbList[Short]("list16", ssdb)
     runTestCase[Short](list16, () => Random.nextInt().toShort)
   }
 
   test("Test List Int") {
 
-    val list32 = SSDBList[Int]("list32", ssdb)
+    val list32 = SsdbList[Int]("list32", ssdb)
     runTestCase[Int](list32, getRandomInt)
   }
 
   test("Test List Long") {
-    val list64 = SSDBList[Long]("list64", ssdb)
+    val list64 = SsdbList[Long]("list64", ssdb)
     runTestCase[Long](list64, () => Random.nextLong())
   }
 
   test("Test List Float") {
 
-    val listDbFloat = SSDBList[Float]("list_float", ssdb)
+    val listDbFloat = SsdbList[Float]("list_float", ssdb)
     runTestCase[Float](listDbFloat, () => Random.nextFloat())
   }
 
   test("Test List Double") {
-    val listDbDouble = SSDBList[Double]("list_double", ssdb)
+    val listDbDouble = SsdbList[Double]("list_double", ssdb)
     runTestCase[Double](listDbDouble, () => Random.nextDouble())
   }
 
   test("Test ListStringImpl") {
-    val stringImpl = SSDBList[String]("list_string_impl", ssdb)
+    val stringImpl = SsdbList[String]("list_string_impl", ssdb)
     runTestCase[String](stringImpl, getRandomString)
   }
 

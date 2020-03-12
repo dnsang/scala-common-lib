@@ -9,7 +9,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 
-case class SSDBList[T: ClassTag](name: String,
+case class SsdbList[T: ClassTag](name: String,
                                  client: SSDB)(
                                   implicit serializer: Serializer[T],
                                   ec: ExecutionContext = ExecutionContext.global
@@ -154,21 +154,21 @@ case class SSDBList[T: ClassTag](name: String,
 
 }
 
-object SSDBList {
+object SsdbList {
 
 
   def apply[T: ClassTag](name: String
                         )(
                           implicit serializer: Serializer[T],
                           ec: ExecutionContext
-                        ): SSDBList[T] = SSDBList(name, SSDBs.DEFAULT_HOST, SSDBs.DEFAULT_PORT)
+                        ): SsdbList[T] = SsdbList(name, SSDBs.DEFAULT_HOST, SSDBs.DEFAULT_PORT)
 
   def apply[T: ClassTag](name: String,
                          host: String,
                          port: Int)(
                           implicit serializer: Serializer[T],
                           ec: ExecutionContext
-                        ): SSDBList[T] = SSDBList(name, host, port, SSDBs.DEFAULT_TIMEOUT)
+                        ): SsdbList[T] = SsdbList(name, host, port, SSDBs.DEFAULT_TIMEOUT)
 
   def apply[T: ClassTag](name: String,
                          host: String,
@@ -176,7 +176,7 @@ object SSDBList {
                          timeout: Int)(
                           implicit serializer: Serializer[T],
                           ec: ExecutionContext
-                        ): SSDBList[T] = SSDBList(name, host, port, timeout, null)
+                        ): SsdbList[T] = SsdbList(name, host, port, timeout, null)
 
   def apply[T: ClassTag](name: String,
                          host: String,
@@ -185,7 +185,7 @@ object SSDBList {
                          config: AnyRef)(
                           implicit serializer: Serializer[T],
                           ec: ExecutionContext
-                        ): SSDBList[T] = SSDBList(name, host, port, timeout, null, null)
+                        ): SsdbList[T] = SsdbList(name, host, port, timeout, null, null)
 
   def apply[T: ClassTag](name: String,
                          host: String,
@@ -195,9 +195,9 @@ object SSDBList {
                          auth: Array[Byte])(
                           implicit serializer: Serializer[T],
                           ec: ExecutionContext
-                        ): SSDBList[T] = {
+                        ): SsdbList[T] = {
     val client = SSDBs.pool(host, port, timeout, config, auth)
-    SSDBList[T](name, client)
+    SsdbList[T](name, client)
   }
 
 
