@@ -30,14 +30,14 @@ trait List[T] {
 
   def get(index: Int): Future[Option[T]]
 
-  def getFront(): Future[Option[T]]
+  def getFront: Future[Option[T]]
 
-  def getBack(): Future[Option[T]]
+  def getBack: Future[Option[T]]
 
   def get(from: Int, num: Int): Future[Option[Array[T]]]
 
   def set(index: Int, value: T): Future[Boolean]
 
-  def getAll(): Future[Option[Array[T]]]
+  def getAll: Future[Option[Array[T]]]
 
 }

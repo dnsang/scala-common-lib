@@ -7,11 +7,26 @@ I32IdGenerator
 	val idGen = I32IdGenerator("project_a","user_id", ssdb)
 	val id = idGen.getNextId()
 
+List
+
+    val listUserFriends = SsdbList[Int]("user_a", ssdb)
+    listUserFriends.multiPushFront(Array(1,2,3,4))
+
+    val listUserMessages = SsdbList[String]("id")
+
+    val listTransaction = SsdbList[Transaction]("user_id")
+
 KeyValueDB
 
-	val kvs = KVSDbImpl("user_db",ssdb)
+	val kvs = SsdbKVS[String,String]("user_db",ssdb)
         kvs.add("user_id","{ json_user_value }")
 	val value = kvs.get("user_id")
+
+	val dbUserProfile = SsdbKVS[Long,UserProfile]("user_profile")
+	val jackProfile = UserProfile(123,"Jack",19,"jack@x.education")
+	dbUserProfile.add(123L, jackProfile)
+	val profile = dbUserProfile.get(123)
+
 
 SortedSet
 
