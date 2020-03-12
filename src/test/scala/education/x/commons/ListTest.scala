@@ -1,11 +1,10 @@
 package education.x.commons
 
-import education.x.commons.list._
 
 import scala.collection.mutable.ListBuffer
 import scala.reflect.ClassTag
 import scala.util.Random
-import SSDBList._
+import education.x.commons.Serializer._
 
 /**
   * @author tvc12 - thienvc
@@ -71,10 +70,10 @@ class ListTest extends BaseSSDBTestCase {
   }
 
 
-  def runTestCase[T: ClassTag](listImpl: list.List[T], getDataTest: () => T): Unit = {
+  def runTestCase[T: ClassTag](listImpl: List[T], getDataTest: () => T): Unit = {
     var data = ListBuffer.empty[T]
     val testCase = new ListTestCase[T]() {
-      override val client: list.List[T] = listImpl
+      override val client: List[T] = listImpl
     }
 
     println("Prepare SSDB")

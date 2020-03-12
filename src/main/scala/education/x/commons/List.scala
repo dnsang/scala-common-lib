@@ -1,11 +1,11 @@
-package education.x.commons.list
+package education.x.commons
 
 import scala.concurrent.Future
 
 /**
-* @author tvc12 - thienvc
-* @since  09/03/2020
-*/
+  * @author tvc12 - thienvc
+  * @since 09/03/2020
+  */
 trait List[T] {
 
   def pushFront(value: T): Future[Boolean]
@@ -39,4 +39,5 @@ trait List[T] {
   def set(index: Int, value: T): Future[Boolean]
 
   def getAll(): Future[Option[Array[T]]]
+
 }
