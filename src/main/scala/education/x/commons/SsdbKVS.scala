@@ -81,12 +81,12 @@ case class SsdbKVS[Key: ClassTag, Value: ClassTag](name: String,
 object SsdbKVS {
 
 
-  def apply[Key: ClassTag, Value: ClassTag](name: String,
-                                            client: SSDB)(
+  def apply[Key: ClassTag, Value: ClassTag](name: String)
+                                           (
                                              implicit keySerializer: Serializer[Key],
                                              valueSerializer: Serializer[Value],
                                              ec: ExecutionContext = ExecutionContext.global
-                                           ): SsdbKVS[Key, Value] = SsdbKVS[Key, Value](name, SSDBs.DEFAULT_HOST,SSDBs.DEFAULT_PORT)
+                                           ): SsdbKVS[Key, Value] = SsdbKVS[Key, Value](name, SSDBs.DEFAULT_HOST, SSDBs.DEFAULT_PORT)
 
   def apply[Key: ClassTag, Value: ClassTag](name: String,
                                             host: String,
