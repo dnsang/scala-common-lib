@@ -30,6 +30,12 @@ class ListTest extends BaseSSDBTestCase {
   }
 
   test("Test multiple constructor") {
+    val listA = SsdbList[Int]("listA")
+    assert(listA != null)
+    val listB = SsdbList[Int]("listB","localhost",8888)
+    assert(listB != null)
+    val listC = SsdbList[Int]("listB","localhost",8888,2000/*ms*/)
+    assert(listC != null)
   }
 
   test("Test List Boolean") {

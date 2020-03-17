@@ -85,7 +85,7 @@ object SsdbKVS {
                                            (
                                              implicit keySerializer: Serializer[Key],
                                              valueSerializer: Serializer[Value],
-                                             ec: ExecutionContext = ExecutionContext.global
+                                             ec: ExecutionContext
                                            ): SsdbKVS[Key, Value] = SsdbKVS[Key, Value](name, SSDBs.DEFAULT_HOST, SSDBs.DEFAULT_PORT)
 
   def apply[Key: ClassTag, Value: ClassTag](name: String,
@@ -93,7 +93,7 @@ object SsdbKVS {
                                             port: Int)(
                                              implicit keySerializer: Serializer[Key],
                                              valueSerializer: Serializer[Value],
-                                             ec: ExecutionContext = ExecutionContext.global
+                                             ec: ExecutionContext
                                            ): SsdbKVS[Key, Value] = SsdbKVS[Key, Value](name, host, port, SSDBs.DEFAULT_TIMEOUT)
 
   def apply[Key: ClassTag, Value: ClassTag](name: String,
@@ -102,7 +102,7 @@ object SsdbKVS {
                                             timeout: Int)(
                                              implicit keySerializer: Serializer[Key],
                                              valueSerializer: Serializer[Value],
-                                             ec: ExecutionContext = ExecutionContext.global
+                                             ec: ExecutionContext
                                            ): SsdbKVS[Key, Value] = SsdbKVS[Key, Value](name, host, port, timeout, null)
 
   def apply[Key: ClassTag, Value: ClassTag](name: String,
@@ -112,7 +112,7 @@ object SsdbKVS {
                                             config: AnyRef)(
                                              implicit keySerializer: Serializer[Key],
                                              valueSerializer: Serializer[Value],
-                                             ec: ExecutionContext = ExecutionContext.global
+                                             ec: ExecutionContext
                                            ): SsdbKVS[Key, Value] = SsdbKVS[Key, Value](name, host, port, timeout, null, null)
 
   def apply[Key: ClassTag, Value: ClassTag](name: String,
@@ -123,7 +123,7 @@ object SsdbKVS {
                                             auth: Array[Byte])(
                                              implicit keySerializer: Serializer[Key],
                                              valueSerializer: Serializer[Value],
-                                             ec: ExecutionContext = ExecutionContext.global
+                                             ec: ExecutionContext
                                            ): SsdbKVS[Key, Value] = {
     val client = SSDBs.pool(host, port, timeout, config, auth)
     SsdbKVS[Key, Value](name, client)
