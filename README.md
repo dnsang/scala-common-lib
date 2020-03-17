@@ -42,8 +42,11 @@ SortedSet
         val top10 = leaderboard.range(0,10)
 
 Usage
+	
+	```
 	<dependency>
   		<groupId>education.x</groupId>
   		<artifactId>common-backend</artifactId>
   		<version>2.1</version>
 	</dependency>
+	```
