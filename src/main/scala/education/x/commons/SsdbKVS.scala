@@ -81,46 +81,51 @@ case class SsdbKVS[Key: ClassTag, Value: ClassTag](name: String,
 object SsdbKVS {
 
 
-  def apply[T: ClassTag](name: String
-                        )(
-                          implicit serializer: Serializer[T],
-                          ec: ExecutionContext
-                        ): SsdbList[T] = SsdbList(name, SSDBs.DEFAULT_HOST, SSDBs.DEFAULT_PORT)
+  def apply[Key: ClassTag, Value: ClassTag](name: String,
+                                            client: SSDB)(
+                                             implicit keySerializer: Serializer[Key],
+                                             valueSerializer: Serializer[Value],
+                                             ec: ExecutionContext = ExecutionContext.global
+                                           ): SsdbKVS[Key, Value] = SsdbKVS[Key, Value](name, SSDBs.DEFAULT_HOST,SSDBs.DEFAULT_PORT)
 
-  def apply[T: ClassTag](name: String,
-                         host: String,
-                         port: Int)(
-                          implicit serializer: Serializer[T],
-                          ec: ExecutionContext
-                        ): SsdbList[T] = SsdbList(name, host, port, SSDBs.DEFAULT_TIMEOUT)
+  def apply[Key: ClassTag, Value: ClassTag](name: String,
+                                            host: String,
+                                            port: Int)(
+                                             implicit keySerializer: Serializer[Key],
+                                             valueSerializer: Serializer[Value],
+                                             ec: ExecutionContext = ExecutionContext.global
+                                           ): SsdbKVS[Key, Value] = SsdbKVS[Key, Value](name, host, port, SSDBs.DEFAULT_TIMEOUT)
 
-  def apply[T: ClassTag](name: String,
-                         host: String,
-                         port: Int,
-                         timeout: Int)(
-                          implicit serializer: Serializer[T],
-                          ec: ExecutionContext
-                        ): SsdbList[T] = SsdbList(name, host, port, timeout, null)
+  def apply[Key: ClassTag, Value: ClassTag](name: String,
+                                            host: String,
+                                            port: Int,
+                                            timeout: Int)(
+                                             implicit keySerializer: Serializer[Key],
+                                             valueSerializer: Serializer[Value],
+                                             ec: ExecutionContext = ExecutionContext.global
+                                           ): SsdbKVS[Key, Value] = SsdbKVS[Key, Value](name, host, port, timeout, null)
 
-  def apply[T: ClassTag](name: String,
-                         host: String,
-                         port: Int,
-                         timeout: Int,
-                         config: AnyRef)(
-                          implicit serializer: Serializer[T],
-                          ec: ExecutionContext
-                        ): SsdbList[T] = SsdbList(name, host, port, timeout, null, null)
+  def apply[Key: ClassTag, Value: ClassTag](name: String,
+                                            host: String,
+                                            port: Int,
+                                            timeout: Int,
+                                            config: AnyRef)(
+                                             implicit keySerializer: Serializer[Key],
+                                             valueSerializer: Serializer[Value],
+                                             ec: ExecutionContext = ExecutionContext.global
+                                           ): SsdbKVS[Key, Value] = SsdbKVS[Key, Value](name, host, port, timeout, null, null)
 
-  def apply[T: ClassTag](name: String,
-                         host: String,
-                         port: Int,
-                         timeout: Int,
-                         config: AnyRef,
-                         auth: Array[Byte])(
-                          implicit serializer: Serializer[T],
-                          ec: ExecutionContext
-                        ): SsdbList[T] = {
+  def apply[Key: ClassTag, Value: ClassTag](name: String,
+                                            host: String,
+                                            port: Int,
+                                            timeout: Int,
+                                            config: AnyRef,
+                                            auth: Array[Byte])(
+                                             implicit keySerializer: Serializer[Key],
+                                             valueSerializer: Serializer[Value],
+                                             ec: ExecutionContext = ExecutionContext.global
+                                           ): SsdbKVS[Key, Value] = {
     val client = SSDBs.pool(host, port, timeout, config, auth)
-    SsdbList[T](name, client)
+    SsdbKVS[Key, Value](name, client)
   }
 }
