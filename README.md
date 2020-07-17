@@ -41,6 +41,19 @@ SortedSet
         val rank = leaderboard.rank("user_1")
         val top10 = leaderboard.range(0,10)
 
+
+
+JDBC Client
+
+        val client = NativeJdbcClient("jdbc:clickhouse://127.0.0.1:9000", "user", "password")
+        // Insert a row
+        client.executeUpdate(
+              s"insert into users(id, name, age, created_date) values(?, ?, ?, ?);",
+              1, "user1", 1, new Date(1589446762000L))
+              
+        // Delete a row          
+        val afftedRows = client.executeUpdate(s"delete from users where id = ?", 1)
+
 Usage
 	
 	```
