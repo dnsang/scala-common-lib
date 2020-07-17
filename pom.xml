@@ -6,7 +6,7 @@
 
     <groupId>education.x</groupId>
     <artifactId>common-backend</artifactId>
-    <version>2.2-SnapShot</version>
+    <version>2.2</version>
     <name>Scala-Common-Backend</name>
     <description>a generic common backend interface and toolkit for java/scala developers.</description>
     <url>https://github.com/dnsang/scala-common-lib</url>
