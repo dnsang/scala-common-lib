@@ -107,7 +107,7 @@
             <groupId>com.github.housepower</groupId>
             <artifactId>clickhouse-native-jdbc</artifactId>
             <version>2.1-stable</version>
-<!--            <scope>test</scope>-->
+            <scope>test</scope>
         </dependency>
 
     </dependencies>
