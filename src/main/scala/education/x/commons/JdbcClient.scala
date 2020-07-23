@@ -1,24 +1,37 @@
 package education.x.commons
 
-import java.sql.{Connection, DriverManager, PreparedStatement, ResultSet}
+import java.sql.{Connection, DriverManager, PreparedStatement, ResultSet, Statement}
 
 import education.x.util.Using
 import javax.sql.DataSource
 
+case class DbRecord(fields: Seq[Any])
 
 trait JdbcClient {
+
+  def execute(query: String, values: Any*): Boolean
 
   def executeQuery[T](query: String, values: Any*)(implicit converter: ResultSet => T): T
 
   def executeUpdate(query: String, values: Any*): Int
 
-  def execute(query: String, values: Any*): Boolean
+  def executeBatchUpdate(query: String, records: Seq[DbRecord], batchSize: Int = 100): Int
+
 }
 
 abstract class AbstractJdbcClient extends JdbcClient {
 
   def getConnection(): Connection
 
+  def execute(query: String, values: Any*): Boolean = {
+    Using(getConnection()) { conn =>  {
+      Using(conn.prepareStatement(query)) { statement => {
+        parameterizeStatement(statement, values).execute()
+      }
+      }
+    }
+    }
+  }
 
   /** *
    *
@@ -61,14 +74,33 @@ abstract class AbstractJdbcClient extends JdbcClient {
     }
   }
 
-  def execute(query: String, values: Any*): Boolean = {
-    Using(getConnection()) { conn =>  {
+  def executeBatchUpdate(query: String, records: Seq[DbRecord], batchSize: Int = 1000): Int = {
+
+    Using(getConnection()) { conn => {
       Using(conn.prepareStatement(query)) { statement => {
-        parameterizeStatement(statement, values).execute()
+        executeBatchUpdate(statement, records, batchSize)
       }
       }
     }
     }
+  }
+
+  private def executeBatchUpdate(statement: PreparedStatement, records: Seq[DbRecord], batchSize: Int) : Int = {
+    var resultCount = 0
+    var batchCount = 0
+    records.foreach(record => {
+      parameterizeStatement(statement, record.fields)
+      statement.addBatch()
+      batchCount += 1
+      if (batchCount % batchSize == 0) {
+        statement.executeBatch()
+        resultCount += batchCount
+      }
+    })
+    statement.executeBatch()
+    resultCount += batchCount
+
+    resultCount
   }
 
   private def parameterizeStatement(statement: PreparedStatement, values: Seq[Any]): PreparedStatement = {
