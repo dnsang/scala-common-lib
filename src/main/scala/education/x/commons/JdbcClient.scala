@@ -15,7 +15,7 @@ trait JdbcClient {
 
   def executeUpdate(query: String, values: Any*): Int
 
-  def executeBatchUpdate(query: String, records: Seq[DbRecord], batchSize: Int = 100): Int
+  def executeBatchUpdate(query: String, records: Seq[DbRecord], batchSize: Int = 500): Int
 
 }
 
@@ -74,7 +74,7 @@ abstract class AbstractJdbcClient extends JdbcClient {
     }
   }
 
-  def executeBatchUpdate(query: String, records: Seq[DbRecord], batchSize: Int = 1000): Int = {
+  def executeBatchUpdate(query: String, records: Seq[DbRecord], batchSize: Int = 500): Int = {
 
     Using(getConnection()) { conn => {
       Using(conn.prepareStatement(query)) { statement => {
