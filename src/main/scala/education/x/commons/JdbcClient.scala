@@ -9,6 +9,8 @@ case class DbRecord(fields: Seq[Any])
 
 trait JdbcClient {
 
+  def getConnection(): Connection
+
   def execute(query: String, values: Any*): Boolean
 
   def executeQuery[T](query: String, values: Any*)(implicit converter: ResultSet => T): T
@@ -17,11 +19,18 @@ trait JdbcClient {
 
   def executeBatchUpdate(query: String, records: Seq[DbRecord], batchSize: Int = 500): Int
 
+
+  def executeWith(conn: Connection, query: String, values: Any*): Boolean
+
+  def executeQueryWith[T](conn: Connection, query: String, values: Any*)(implicit converter: ResultSet => T): T
+
+  def executeUpdateWith(conn: Connection, query: String, values: Any*): Int
+
+  def executeBatchUpdateWith(conn: Connection, query: String, records: Seq[DbRecord], batchSize: Int = 500): Int
+
 }
 
 abstract class AbstractJdbcClient extends JdbcClient {
-
-  def getConnection(): Connection
 
   def execute(query: String, values: Any*): Boolean = {
     Using(getConnection()) { conn =>  {
@@ -83,6 +92,41 @@ abstract class AbstractJdbcClient extends JdbcClient {
       }
     }
     }
+  }
+
+
+
+  def executeWith(conn: Connection, query: String, values: Any*): Boolean = {
+   
+      Using(conn.prepareStatement(query)) { statement => {
+        parameterizeStatement(statement, values).execute()
+      }
+      }
+  
+  }
+
+  def executeQueryWith[T](conn: Connection, query: String, values: Any*)(implicit converter: ResultSet => T): T = {
+      Using(conn.prepareStatement(query)) { statement => {
+        Using(parameterizeStatement(statement, values).executeQuery()) { resultSet => {
+          converter(resultSet)
+        }
+        }
+      }
+      }
+  }
+
+  def executeUpdateWith(conn: Connection, query: String, values: Any*): Int = {
+      Using(conn.prepareStatement(query)) { statement => {
+        parameterizeStatement(statement, values).executeUpdate()
+      }
+      }
+  }
+
+  def executeBatchUpdateWith(conn: Connection, query: String, records: Seq[DbRecord], batchSize: Int = 500): Int = {
+      Using(conn.prepareStatement(query)) { statement => {
+        executeBatchUpdate(statement, records, batchSize)
+      }
+      }
   }
 
   private def executeBatchUpdate(statement: PreparedStatement, records: Seq[DbRecord], batchSize: Int) : Int = {

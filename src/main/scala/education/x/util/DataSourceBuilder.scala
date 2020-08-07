@@ -18,6 +18,7 @@ object DataSourceBuilder {
     ds.setJdbcUrl(jdbcUrl)
     ds.setUsername(username)
     ds.setPassword(password)
+    ds.setAutoCommit(true)
     ds
   }
 
@@ -29,9 +30,11 @@ object DataSourceBuilder {
                            tz: Option[String] = Some("Asia/Ho_Chi_Minh")): DataSource = {
     val ds = new HikariDataSource
     ds.setDriverClassName("com.mysql.jdbc.Driver")
-    ds.setJdbcUrl(s"jdbc:mysql://$host:$port/$dbName?useLegacyDatetimeCode=false&serverTimezone=${tz.get}")
+    ds.setJdbcUrl(s"jdbc:mysql://$host:$port/$dbName?useUnicode=true&characterEncoding=UTF-8&serverTimezone=${tz.get}")
     ds.setUsername(username)
     ds.setPassword(password)
+    ds.setAutoCommit(true)
+
     ds
   }
 }

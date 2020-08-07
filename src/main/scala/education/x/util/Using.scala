@@ -12,9 +12,11 @@ object Using {
       function(resource)
     } finally {
       try {
-        resource.close()
+        if(resource!=null)
+          resource.close()
       } catch {
-        case throwable: Throwable => throwable.printStackTrace()
+        case throwable: Throwable =>
+          throwable.printStackTrace()
       }
     }
 
