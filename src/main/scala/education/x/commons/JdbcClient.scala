@@ -5,8 +5,6 @@ import java.sql.{Connection, DriverManager, PreparedStatement, ResultSet, Statem
 import education.x.util.Using
 import javax.sql.DataSource
 
-case class DbRecord(fields: Seq[Any])
-
 trait JdbcClient {
 
   def getConnection(): Connection
@@ -17,16 +15,8 @@ trait JdbcClient {
 
   def executeUpdate(query: String, values: Any*): Int
 
-  def executeBatchUpdate(query: String, records: Seq[DbRecord], batchSize: Int = 500): Int
+  def executeBatchUpdate(query: String, records: Seq[Seq[Any]], batchSize: Int = 500): Int
 
-
-  def executeWith(conn: Connection, query: String, values: Any*): Boolean
-
-  def executeQueryWith[T](conn: Connection, query: String, values: Any*)(implicit converter: ResultSet => T): T
-
-  def executeUpdateWith(conn: Connection, query: String, values: Any*): Int
-
-  def executeBatchUpdateWith(conn: Connection, query: String, records: Seq[DbRecord], batchSize: Int = 500): Int
 
 }
 
@@ -83,7 +73,7 @@ abstract class AbstractJdbcClient extends JdbcClient {
     }
   }
 
-  def executeBatchUpdate(query: String, records: Seq[DbRecord], batchSize: Int = 500): Int = {
+  def executeBatchUpdate(query: String, records: Seq[Seq[Any]], batchSize: Int = 500): Int = {
 
     Using(getConnection()) { conn => {
       Using(conn.prepareStatement(query)) { statement => {
@@ -94,46 +84,11 @@ abstract class AbstractJdbcClient extends JdbcClient {
     }
   }
 
-
-
-  def executeWith(conn: Connection, query: String, values: Any*): Boolean = {
-   
-      Using(conn.prepareStatement(query)) { statement => {
-        parameterizeStatement(statement, values).execute()
-      }
-      }
-  
-  }
-
-  def executeQueryWith[T](conn: Connection, query: String, values: Any*)(implicit converter: ResultSet => T): T = {
-      Using(conn.prepareStatement(query)) { statement => {
-        Using(parameterizeStatement(statement, values).executeQuery()) { resultSet => {
-          converter(resultSet)
-        }
-        }
-      }
-      }
-  }
-
-  def executeUpdateWith(conn: Connection, query: String, values: Any*): Int = {
-      Using(conn.prepareStatement(query)) { statement => {
-        parameterizeStatement(statement, values).executeUpdate()
-      }
-      }
-  }
-
-  def executeBatchUpdateWith(conn: Connection, query: String, records: Seq[DbRecord], batchSize: Int = 500): Int = {
-      Using(conn.prepareStatement(query)) { statement => {
-        executeBatchUpdate(statement, records, batchSize)
-      }
-      }
-  }
-
-  private def executeBatchUpdate(statement: PreparedStatement, records: Seq[DbRecord], batchSize: Int) : Int = {
+  private def executeBatchUpdate(statement: PreparedStatement, records: Seq[Seq[Any]], batchSize: Int) : Int = {
     var resultCount = 0
     var batchCount = 0
     records.foreach(record => {
-      parameterizeStatement(statement, record.fields)
+      parameterizeStatement(statement, record)
       statement.addBatch()
       batchCount += 1
       if (batchCount % batchSize == 0) {

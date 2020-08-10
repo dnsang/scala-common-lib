@@ -130,12 +130,12 @@ class JdbcClientTest extends FunSuite {
          |""".stripMargin) >= 0)
 
     val records = Seq(
-      DbRecord(Seq(1, "user1", 1, new Date(1589446762000L))),
-      DbRecord(Seq(2, "user2", 4, new Date(1589446762000L))),
-      DbRecord(Seq(3, "user3", 7, new Date(1589446762000L))),
-      DbRecord(Seq(4, "user4", 5, new Date(1589446762000L))),
-      DbRecord(Seq(5, "user5", 18, new Date(1589446762000L))),
-      DbRecord(Seq(7, "user7", 67, new Date(1589446762000L)))
+      Seq(Seq(1, "user1", 1, new Date(1589446762000L))),
+      Seq(Seq(2, "user2", 4, new Date(1589446762000L))),
+      Seq(Seq(3, "user3", 7, new Date(1589446762000L))),
+      Seq(Seq(4, "user4", 5, new Date(1589446762000L))),
+      Seq(Seq(5, "user5", 18, new Date(1589446762000L))),
+      Seq(Seq(7, "user7", 67, new Date(1589446762000L)))
     )
 
     assert(client.executeBatchUpdate(s"insert into $dbName.$tblName(id, name, age, created_date) values(?, ?, ?, ?)", records) == 6)
