@@ -7,6 +7,11 @@ import javax.sql.DataSource
  * @author andy
  * @since 7/31/20
  **/
+
+object DataSourceBuilder {
+  def hikari() = HikariDataSourceBuilder()
+}
+
 trait DataSourceBuilder[DS <: DataSource] {
   def build(): DS
 }
@@ -65,6 +70,4 @@ case class HikariDataSourceBuilder() extends DataSourceBuilder[HikariDataSource]
   }
 }
 
-object DataSourceBuilders {
-  def hikari() = HikariDataSourceBuilder()
-}
+
