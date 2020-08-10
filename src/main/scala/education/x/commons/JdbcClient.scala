@@ -2,8 +2,13 @@ package education.x.commons
 
 import java.sql.{Connection, DriverManager, PreparedStatement, ResultSet, Statement}
 
+import education.x.commons.JdbcClient.Record
 import education.x.util.Using
 import javax.sql.DataSource
+
+object JdbcClient {
+  type Record = Seq[Any]
+}
 
 trait JdbcClient {
 
@@ -13,11 +18,9 @@ trait JdbcClient {
 
   def executeQuery[T](query: String, values: Any*)(implicit converter: ResultSet => T): T
 
-  def executeUpdate(query: String, values: Any*): Int
+  def executeUpdate(query: String, record: Any*): Int
 
-  def executeBatchUpdate(query: String, records: Seq[Seq[Any]], batchSize: Int = 500): Int
-
-
+  def executeBatchUpdate(query: String, records: Seq[Record]): Int
 }
 
 abstract class AbstractJdbcClient extends JdbcClient {
@@ -60,46 +63,32 @@ abstract class AbstractJdbcClient extends JdbcClient {
    * Supported Type: Boolean, BigDecimal, Byte, Date, Float, Double, Int, Long, String, Time, Timestamp
    *
    * @param query Parameterized Query
-   * @param values Value to put to parameterized query
+   * @param record Value to put to parameterized query
    * @return
    */
-  def executeUpdate(query: String, values: Any*): Int = {
+  def executeUpdate(query: String, record: Any*): Int = {
     Using(getConnection()) { conn => {
       Using(conn.prepareStatement(query)) { statement => {
-        parameterizeStatement(statement, values).executeUpdate()
+        parameterizeStatement(statement, record).executeUpdate()
       }
       }
     }
     }
   }
 
-  def executeBatchUpdate(query: String, records: Seq[Seq[Any]], batchSize: Int = 500): Int = {
-
+  def executeBatchUpdate(query: String, records: Seq[Record]): Int = {
     Using(getConnection()) { conn => {
       Using(conn.prepareStatement(query)) { statement => {
-        executeBatchUpdate(statement, records, batchSize)
-      }
-      }
-    }
-    }
-  }
-
-  private def executeBatchUpdate(statement: PreparedStatement, records: Seq[Seq[Any]], batchSize: Int) : Int = {
-    var resultCount = 0
-    var batchCount = 0
-    records.foreach(record => {
-      parameterizeStatement(statement, record)
-      statement.addBatch()
-      batchCount += 1
-      if (batchCount % batchSize == 0) {
+        records.foreach(record => {
+          parameterizeStatement(statement, record)
+          statement.addBatch()
+        })
         statement.executeBatch()
-        resultCount += batchCount
+        records.size
       }
-    })
-    statement.executeBatch()
-    resultCount += batchCount
-
-    resultCount
+      }
+    }
+    }
   }
 
   private def parameterizeStatement(statement: PreparedStatement, values: Seq[Any]): PreparedStatement = {
@@ -137,7 +126,6 @@ case class NativeJdbcClient(jdbcUrl: String,
       DriverManager.getConnection(jdbcUrl)
   }
 }
-
 
 case class HikariJdbcClient(ds: DataSource) extends AbstractJdbcClient {
 
