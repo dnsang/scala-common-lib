@@ -54,7 +54,7 @@ case class HikariDataSourceBuilder() extends DataSourceBuilder[HikariDataSource]
     val ds = new HikariDataSource
     ds.setDriverClassName(driver)
     ds.setJdbcUrl(jdbcUrl)
-    if (username != null) {
+    if (username != null && username.trim.nonEmpty) {
       ds.setUsername(username)
       ds.setPassword(password)
     }
