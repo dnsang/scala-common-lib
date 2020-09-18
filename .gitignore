@@ -283,3 +283,4 @@ $RECYCLE.BIN/
 *.lnk
 *.iml
 # End of https://www.gitignore.io/api/git,java,linux,macos,scala,windows,eclipse,intellij,netbeans
+.vscode

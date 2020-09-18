@@ -1,6 +1,6 @@
 package education.x.commons
 
-import java.sql.{Connection, DriverManager, PreparedStatement, ResultSet, Statement}
+import java.sql.{Connection, DriverManager, PreparedStatement, ResultSet}
 
 import education.x.commons.JdbcClient.Record
 import education.x.util.Using
@@ -26,7 +26,7 @@ trait JdbcClient {
 abstract class AbstractJdbcClient extends JdbcClient {
 
   def execute(query: String, values: Any*): Boolean = {
-    Using(getConnection()) { conn =>  {
+    Using(getConnection()) { conn => {
       Using(conn.prepareStatement(query)) { statement => {
         parameterizeStatement(statement, values).execute()
       }
@@ -40,7 +40,7 @@ abstract class AbstractJdbcClient extends JdbcClient {
    * Ex: executeQuery( "Select from Users where id = ?;", 1)
    * Supported Type: Boolean, BigDecimal, Byte, Date, Float, Double, Int, Long, String, Time, Timestamp
    *
-   * @param query Parameterized Query
+   * @param query  Parameterized Query
    * @param values Value to put to parameterized query
    * @return
    */
@@ -62,7 +62,7 @@ abstract class AbstractJdbcClient extends JdbcClient {
    * Ex: executeUpdate( "Insert INTO Users(?,?)", 1L, "User A")
    * Supported Type: Boolean, BigDecimal, Byte, Date, Float, Double, Int, Long, String, Time, Timestamp
    *
-   * @param query Parameterized Query
+   * @param query  Parameterized Query
    * @param record Value to put to parameterized query
    * @return
    */
@@ -93,23 +93,23 @@ abstract class AbstractJdbcClient extends JdbcClient {
 
   private def parameterizeStatement(statement: PreparedStatement, values: Seq[Any]): PreparedStatement = {
 
-    values.zipWithIndex.foreach{
-      case (value, index) =>
-        val paramIndex  = index + 1
+    values.zipWithIndex.map(e => (e._1, e._2 + 1)).foreach {
+      case (value, paramIndex) =>
         value match {
-        case v: java.sql.Date => statement.setDate(paramIndex, v)
-        case v: java.sql.Time => statement.setTime(paramIndex, v)
-        case v: java.sql.Timestamp => statement.setTimestamp(paramIndex, v)
-        case v: Boolean => statement.setBoolean(paramIndex, v)
-        case v: Byte => statement.setByte(paramIndex, v)
-        case v: Int => statement.setInt(paramIndex, v)
-        case v: Long => statement.setLong(paramIndex, v)
-        case v: Float => statement.setFloat(paramIndex, v)
-        case v: Double => statement.setDouble(paramIndex, v)
-        case v: java.math.BigDecimal => statement.setBigDecimal(paramIndex, v)
-        case v: String => statement.setString(paramIndex, v)
-        case e: Any => throw new IllegalArgumentException(s"unsupported data type + $e + ${e.getClass}")
-      }
+          case v: java.sql.Date => statement.setDate(paramIndex, v)
+          case v: java.sql.Time => statement.setTime(paramIndex, v)
+          case v: java.sql.Timestamp => statement.setTimestamp(paramIndex, v)
+          case v: Boolean => statement.setBoolean(paramIndex, v)
+          case v: Byte => statement.setByte(paramIndex, v)
+          case v: Int => statement.setInt(paramIndex, v)
+          case v: Long => statement.setLong(paramIndex, v)
+          case v: Float => statement.setFloat(paramIndex, v)
+          case v: Double => statement.setDouble(paramIndex, v)
+          case v: java.math.BigDecimal => statement.setBigDecimal(paramIndex, v)
+          case v: String => statement.setString(paramIndex, v)
+          case v: java.sql.Array => statement.setArray(paramIndex, v)
+          case e: Any => throw new IllegalArgumentException(s"unsupported data type + $e + ${e.getClass}")
+        }
     }
     statement
   }
@@ -120,7 +120,7 @@ case class NativeJdbcClient(jdbcUrl: String,
                             username: String,
                             password: String) extends AbstractJdbcClient {
   override def getConnection(): Connection = {
-    if(username != null && username.nonEmpty)
+    if (username != null && username.nonEmpty)
       DriverManager.getConnection(jdbcUrl, username, password)
     else
       DriverManager.getConnection(jdbcUrl)
@@ -129,7 +129,7 @@ case class NativeJdbcClient(jdbcUrl: String,
 
 case class HikariJdbcClient(ds: DataSource) extends AbstractJdbcClient {
 
-  override def getConnection(): Connection =  ds.getConnection
+  override def getConnection(): Connection = ds.getConnection
 
 }
 
