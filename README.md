@@ -60,6 +60,6 @@ Usage
 	<dependency>
   		<groupId>education.x</groupId>
   		<artifactId>common-backend</artifactId>
-  		<version>2.1</version>
+  		<version>2.3-SnapShot</version>
 	</dependency>
 	```
