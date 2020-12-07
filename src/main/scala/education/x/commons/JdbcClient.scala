@@ -2,30 +2,45 @@ package education.x.commons
 
 import java.sql.{Connection, DriverManager, PreparedStatement, ResultSet}
 
+import education.x.commons.JdbcClient.Record
 import education.x.util.Using
 import javax.sql.DataSource
 
+object JdbcClient {
+  type Record = Seq[Any]
+}
 
 trait JdbcClient {
 
-  def executeQuery[T](query: String, values: Any*)(implicit converter: ResultSet => T): T
-
-  def executeUpdate(query: String, values: Any*): Int
+  def getConnection(): Connection
 
   def execute(query: String, values: Any*): Boolean
+
+  def executeQuery[T](query: String, values: Any*)(implicit converter: ResultSet => T): T
+
+  def executeUpdate(query: String, record: Any*): Int
+
+  def executeBatchUpdate(query: String, records: Seq[Record]): Int
 }
 
 abstract class AbstractJdbcClient extends JdbcClient {
 
-  def getConnection(): Connection
-
+  def execute(query: String, values: Any*): Boolean = {
+    Using(getConnection()) { conn => {
+      Using(conn.prepareStatement(query)) { statement => {
+        parameterizeStatement(statement, values).execute()
+      }
+      }
+    }
+    }
+  }
 
   /** *
    *
    * Ex: executeQuery( "Select from Users where id = ?;", 1)
    * Supported Type: Boolean, BigDecimal, Byte, Date, Float, Double, Int, Long, String, Time, Timestamp
    *
-   * @param query Parameterized Query
+   * @param query  Parameterized Query
    * @param values Value to put to parameterized query
    * @return
    */
@@ -47,24 +62,29 @@ abstract class AbstractJdbcClient extends JdbcClient {
    * Ex: executeUpdate( "Insert INTO Users(?,?)", 1L, "User A")
    * Supported Type: Boolean, BigDecimal, Byte, Date, Float, Double, Int, Long, String, Time, Timestamp
    *
-   * @param query Parameterized Query
-   * @param values Value to put to parameterized query
+   * @param query  Parameterized Query
+   * @param record Value to put to parameterized query
    * @return
    */
-  def executeUpdate(query: String, values: Any*): Int = {
+  def executeUpdate(query: String, record: Any*): Int = {
     Using(getConnection()) { conn => {
       Using(conn.prepareStatement(query)) { statement => {
-        parameterizeStatement(statement, values).executeUpdate()
+        parameterizeStatement(statement, record).executeUpdate()
       }
       }
     }
     }
   }
 
-  def execute(query: String, values: Any*): Boolean = {
-    Using(getConnection()) { conn =>  {
+  def executeBatchUpdate(query: String, records: Seq[Record]): Int = {
+    Using(getConnection()) { conn => {
       Using(conn.prepareStatement(query)) { statement => {
-        parameterizeStatement(statement, values).execute()
+        records.foreach(record => {
+          parameterizeStatement(statement, record)
+          statement.addBatch()
+        })
+        statement.executeBatch()
+        records.size
       }
       }
     }
@@ -73,23 +93,23 @@ abstract class AbstractJdbcClient extends JdbcClient {
 
   private def parameterizeStatement(statement: PreparedStatement, values: Seq[Any]): PreparedStatement = {
 
-    values.zipWithIndex.foreach{
-      case (value, index) =>
-        val paramIndex  = index + 1
+    values.zipWithIndex.map(e => (e._1, e._2 + 1)).foreach {
+      case (value, paramIndex) =>
         value match {
-        case v: java.sql.Date => statement.setDate(paramIndex, v)
-        case v: java.sql.Time => statement.setTime(paramIndex, v)
-        case v: java.sql.Timestamp => statement.setTimestamp(paramIndex, v)
-        case v: Boolean => statement.setBoolean(paramIndex, v)
-        case v: Byte => statement.setByte(paramIndex, v)
-        case v: Int => statement.setInt(paramIndex, v)
-        case v: Long => statement.setLong(paramIndex, v)
-        case v: Float => statement.setFloat(paramIndex, v)
-        case v: Double => statement.setDouble(paramIndex, v)
-        case v: java.math.BigDecimal => statement.setBigDecimal(paramIndex, v)
-        case v: String => statement.setString(paramIndex, v)
-        case e: Any => throw new IllegalArgumentException(s"unsupported data type + $e + ${e.getClass}")
-      }
+          case v: java.sql.Date => statement.setDate(paramIndex, v)
+          case v: java.sql.Time => statement.setTime(paramIndex, v)
+          case v: java.sql.Timestamp => statement.setTimestamp(paramIndex, v)
+          case v: Boolean => statement.setBoolean(paramIndex, v)
+          case v: Byte => statement.setByte(paramIndex, v)
+          case v: Int => statement.setInt(paramIndex, v)
+          case v: Long => statement.setLong(paramIndex, v)
+          case v: Float => statement.setFloat(paramIndex, v)
+          case v: Double => statement.setDouble(paramIndex, v)
+          case v: java.math.BigDecimal => statement.setBigDecimal(paramIndex, v)
+          case v: String => statement.setString(paramIndex, v)
+          case v: java.sql.Array => statement.setArray(paramIndex, v)
+          case e: Any => throw new IllegalArgumentException(s"unsupported data type + $e + ${e.getClass}")
+        }
     }
     statement
   }
@@ -100,17 +120,16 @@ case class NativeJdbcClient(jdbcUrl: String,
                             username: String,
                             password: String) extends AbstractJdbcClient {
   override def getConnection(): Connection = {
-    if(username != null && username.nonEmpty)
+    if (username != null && username.nonEmpty)
       DriverManager.getConnection(jdbcUrl, username, password)
     else
       DriverManager.getConnection(jdbcUrl)
   }
 }
 
-
 case class HikariJdbcClient(ds: DataSource) extends AbstractJdbcClient {
 
-  override def getConnection(): Connection =  ds.getConnection
+  override def getConnection(): Connection = ds.getConnection
 
 }
 

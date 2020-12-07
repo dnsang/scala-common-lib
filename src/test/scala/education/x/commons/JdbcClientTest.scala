@@ -24,7 +24,7 @@ class JdbcClientTest extends FunSuite {
 
     val client = NativeJdbcClient(jdbcUrl, user, password)
     singleCRUDClickhouseTest(client)
-
+    batchInsertClickhouseTest(client)
   }
 
   /** *
@@ -104,6 +104,43 @@ class JdbcClientTest extends FunSuite {
     assert(client.executeUpdate(s"alter table $dbName.$tblName delete where id = ?;", 1) >= 0)
 
     assert(client.executeQuery(s"select count(*) from $dbName.$tblName;")(_.next()))
+
+    assert(client.executeUpdate(s"drop database $dbName;") >= 0)
+
+  }
+
+  def batchInsertClickhouseTest(client: JdbcClient): Unit = {
+
+    val dbName = "bi_service_client_test"
+    val tblName = "users"
+
+    assert(client.executeUpdate(s"drop database if exists $dbName;") >= 0)
+
+    assert(client.executeUpdate(s"create database $dbName;") >= 0)
+
+    assert(client.executeUpdate(
+      s"""
+         |create table $dbName.$tblName(
+         |created_date Date default toDate(toDateTime(timestamp)),
+         |timestamp UInt64 default toUnixTimestamp(now()),
+         |id Int32,
+         |name String,
+         |age UInt32
+         |) Engine=MergeTree(created_date, (timestamp, id), 8192);
+         |""".stripMargin) >= 0)
+
+    val records = Seq(
+      Seq(Seq(1, "user1", 1, new Date(1589446762000L))),
+      Seq(Seq(2, "user2", 4, new Date(1589446762000L))),
+      Seq(Seq(3, "user3", 7, new Date(1589446762000L))),
+      Seq(Seq(4, "user4", 5, new Date(1589446762000L))),
+      Seq(Seq(5, "user5", 18, new Date(1589446762000L))),
+      Seq(Seq(7, "user7", 67, new Date(1589446762000L)))
+    )
+
+    assert(client.executeBatchUpdate(s"insert into $dbName.$tblName(id, name, age, created_date) values(?, ?, ?, ?)", records) == 6)
+
+    assert(client.executeQuery(s"select * from $dbName.$tblName;")(_.next()))
 
     assert(client.executeUpdate(s"drop database $dbName;") >= 0)
 
